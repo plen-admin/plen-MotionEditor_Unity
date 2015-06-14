@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
-using UnityEditor;
+//using UnityEditor;
 using System.Collections;
 using System.IO;
 
@@ -21,8 +21,8 @@ public class MenuGUI : MonoBehaviour {
 	{
 		Text labelDegugText = labelDebug.GetComponent<Text> ();
 
-		string str = EditorUtility.OpenFilePanel ("File Select", "", "");
-		labelDegugText.text = str;
+//		string str = EditorUtility.OpenFilePanel ("File Select", "", "");
+//		labelDegugText.text = str;
 	}
 	public void BtnSave_Click()
 	{
@@ -39,7 +39,7 @@ public class MenuGUI : MonoBehaviour {
 		Text labelDegugText = labelDebug.GetComponent<Text> ();
 		labelDegugText.text = "BtnDefaultPos Click";
 
-		MotionDataUpper motionData = motionDataObject.GetComponent<MotionDataUpper> ();
+		MotionData motionData = motionDataObject.GetComponent<MotionData> ();
 		motionData.FrameInitialize (motionData.index);
 	}
 	public void BtnPlay_Click()

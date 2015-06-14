@@ -44,7 +44,7 @@ public class ModelViewCamera : MonoBehaviour {
 
 	private Transform clickedModelPart = null;
 
-	public List<GameObject> AdjustableModelParts;
+	private  List<GameObject> AdjustableModelParts =  null;
 	public GameObject MotionDataObject;
 
 	/***** 初回実行メソッド（オーバーライド） *****/
@@ -68,6 +68,10 @@ public class ModelViewCamera : MonoBehaviour {
 		//if(this.GetComponent<Camera>().rect.Contains(new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y))) 
 		{
 			if (Input.GetMouseButton (0)) {
+				if (AdjustableModelParts == null) {
+					MotionData motionData = MotionDataObject.GetComponent<MotionData> ();
+					AdjustableModelParts = new List<GameObject> (motionData.modelJointList);
+				}
 				// 押下した瞬間
 				if (isMouseDown [0] == false) {
 					clickedModelPart = null;
@@ -191,11 +195,12 @@ public class ModelViewCamera : MonoBehaviour {
 		posBefore = Input.mousePosition;
 	}
 	private void JointRotation() {
-		JointName clickedJointName = clickedModelPart.GetComponent<JointParameter> ().name;
-		MotionDataUpper motionData = MotionDataObject.GetComponent<MotionDataUpper> ();
+		JointName clickedJointName = clickedModelPart.GetComponent<JointParameter> ().Name;
+		MotionData motionData = MotionDataObject.GetComponent<MotionData> ();
 
+	
 		motionData.frameList [motionData.index].JointRotate (clickedJointName, 
-			(posBefore.y - Input.mousePosition.y) * 5f);
+			(Input.mousePosition.y - posBefore.y) * 2.0f);
 		// 旧マウスポインタ座標更新
 		posBefore = Input.mousePosition;
 
