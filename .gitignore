@@ -4,6 +4,7 @@ Temp/
 Obj/
 UnityGenerated/
 Library/
+tmp/
 
 # ===================================== #
 # Visual Studio / MonoDevelop generated #

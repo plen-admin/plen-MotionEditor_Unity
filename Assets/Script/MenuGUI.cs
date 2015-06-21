@@ -6,6 +6,8 @@ using System.IO;
 
 public class MenuGUI : MonoBehaviour {
 	public GameObject labelDebug;
+	public PLENModelAnimation plenAnimation;
+	public PanelFramesScript panelFrames;
 	private Vector2 clickPos;
 
 	// Use this for initialization
@@ -46,21 +48,25 @@ public class MenuGUI : MonoBehaviour {
 	{
 		Text labelDegugText = labelDebug.GetComponent<Text> ();
 		labelDegugText.text = "BtnPlay Click";
+		plenAnimation.AnimationPlay ();
 	}
 	public void BtnStop_Click()
 	{
 		Text labelDegugText = labelDebug.GetComponent<Text> ();
 		labelDegugText.text = "BtnStop Click";
+		plenAnimation.AnimationStop ();
 	}
 	public void BtnBackFrame_Click()
 	{
 		Text labelDegugText = labelDebug.GetComponent<Text> ();
 		labelDegugText.text = "BtnBackFrame Click";
+		panelFrames.FrameGoBack ();
 	}
 	public void BtnForwardFrame_Click()
 	{
 		Text labelDegugText = labelDebug.GetComponent<Text> ();
 		labelDegugText.text = "BtnForwardFrame Click";
+		panelFrames.FrameGoNext ();
 	}
 	public void BtnConnect_Click()
 	{

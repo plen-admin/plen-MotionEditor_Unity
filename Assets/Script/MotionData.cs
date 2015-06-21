@@ -5,8 +5,7 @@ using System.Collections.Generic;
 public class MotionData : MonoBehaviour {
 	public List<Frame> frameList =  new List<Frame>();
 
-	// 関節オブジェクト類（これらにセットされているオブジェクトの角度を変更していく）
-	// Note...これらはUnityのInspector上で設定されるので，ソース上で初期化等の処理はしない．
+	// 関節オブジェクト類（これらにセットされているオブジェクトの角度を変更していく）（インスペクタで初期化）
 	public GameObject LeftShoulderP;
 	public GameObject LeftThighY;
 	public GameObject LeftShoulderR;
@@ -26,7 +25,7 @@ public class MotionData : MonoBehaviour {
 	public GameObject RightFootP;
 	public GameObject RightFootR;
 	/// <summary>
-	/// 現在編集中のフレームインデックス
+	/// 現在選択中のフレームインデックス
 	/// </summary>
 	public int index;
 	/// <summary>
@@ -36,7 +35,7 @@ public class MotionData : MonoBehaviour {
 		get { return defaultFrame; }
 	}
 	/// <summary>
-	/// 関節オブジェクトリスト
+	/// 関節オブジェクトリスト（インスペクタで初期化）
 	/// (LeftShoulderP，...，RightFootR(18関節)がリスト化されている)
 	/// </summary>
 	public List<GameObject> modelJointList = new List<GameObject> ();
@@ -66,9 +65,8 @@ public class MotionData : MonoBehaviour {
 		modelJointList.Add (RightKneeP);
 		modelJointList.Add (RightFootP);
 		modelJointList.Add (RightFootR);
-		// 初期フレームを作成．フレームリストに追加．
+		// 初期フレームを作成．
 		defaultFrame = new Frame (modelJointList);
-		frameList.Add(new Frame(defaultFrame, modelJointList));
 		// 初期状態にモデルを調整．
 		modelAllJointRotation (DefaultFrame);
 	}
@@ -76,15 +74,39 @@ public class MotionData : MonoBehaviour {
 	void Update() {
 	}
 
-	public void FrameInitialize(int index) {
-		//frameList [index] = DefaultFrame;
-		// 
-		for (int i = 0; i < DefaultFrame.jointAngles.Length; i++)
-			frameList [index].jointAngles [i] = new JointAngle(DefaultFrame.jointAngles [i]);
+	public void CreateNewFrame(int newFrameIndex = -1, int baseFrameIndex = -1) {
+		Frame baseFrame;
+		if (baseFrameIndex < 0 || frameList.Count == 0)
+			baseFrame = defaultFrame;
+		else
+			baseFrame = frameList [baseFrameIndex];
 		
+		if (newFrameIndex < 0) {
+			frameList.Add (new Frame (baseFrame, modelJointList));
+			index = frameList.Count - 1;
+		} else {
+			frameList.Insert (newFrameIndex, new Frame (baseFrame, modelJointList));
+			index = newFrameIndex;
+		}
+	}
+	public void ChangeSelectFrame(int selectedIndex) {
+		index = selectedIndex;
 		modelAllJointRotation (frameList [index]);
 	}
 
+	public void FrameInitialize(int initIndex) {
+		//frameList [index] = DefaultFrame;
+		// 
+		for (int i = 0; i < DefaultFrame.jointAngles.Length; i++)
+			frameList [initIndex].jointAngles [i] = new JointAngle(DefaultFrame.jointAngles [i]);
+		
+		modelAllJointRotation (frameList [initIndex]);
+	}
+	public void FrameRemove(int removeIndex) {
+		frameList.RemoveAt (removeIndex);
+		if (index > frameList.Count - 1)
+			index = frameList.Count - 1;
+	}
 	private void modelAllJointRotation(Frame frame) {
 		for (int i = 0; i < modelJointList.Count; i++)
 			modelJointList [i].transform.localEulerAngles = frame.jointAngles[i].eulerAngle;
@@ -94,6 +116,7 @@ public class MotionData : MonoBehaviour {
 
 public class Frame {
 	public JointAngle[] jointAngles;
+	public int transitionTime = 1000;
 	private List<GameObject> modelJointList;
 
 	public Frame(List<GameObject> jointList) {
@@ -155,9 +178,9 @@ public class Frame {
 				break;
 			}
 			modelJointList [(int)jointName].transform.localEulerAngles = jointAngles [(int)jointName].eulerAngle;
+			jointAngles [(int)jointName].Angle += angle;
 		}
 	}
-
 }
 
 public class JointAngle {
@@ -168,17 +191,15 @@ public class JointAngle {
 	public AdjustPossibleCoord coord;
 	public Vector3 eulerAngle; 
 
-	public int Angle {
+	public float Angle {
 		get{
 			return _angle;
 		}
 		set{
-			if (value > max)		_angle = max;
-			else if (value < min)	_angle = min;
-			else					_angle = value;
+			_angle = value;
 		}
 	}
-	private int _angle;
+	private float _angle;
 
 
 	public JointAngle(int _jointIndex, int _max, int _home, int _min, AdjustPossibleCoord _coord, Vector3 _eulerAngle) {
