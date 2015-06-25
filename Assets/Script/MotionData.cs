@@ -1,6 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System;
+using LitJson;
+using PLEN;
 
 public class MotionData : MonoBehaviour {
 	public List<Frame> frameList =  new List<Frame>();
@@ -107,10 +110,61 @@ public class MotionData : MonoBehaviour {
 		if (index > frameList.Count - 1)
 			index = frameList.Count - 1;
 	}
+
+	public string MotionJSONDataCreate(string savePath) {
+		PLEN.JSON.Main jsonMain = new PLEN.JSON.Main ();
+		jsonMain.name = "Sample";
+		jsonMain.slot = 0;
+		foreach (Frame frame in frameList) {
+			jsonMain.frames.Add(frame.FrameJSONDataCreate());
+		}
+
+		return JsonMapper.ToJson (jsonMain);
+
+	}
+
+	public bool MotionJSONDataRead(string jsonStr) {
+		try {
+			PLEN.JSON.Main jsonMain = LitJson.JsonMapper.ToObject<PLEN.JSON.Main> (jsonStr);
+
+			if (jsonMain == null)
+				return false;
+	
+			frameList.Clear ();
+
+			foreach (PLEN.JSON.Frame jsonFrame in jsonMain.frames) {
+				Frame frame = new Frame (defaultFrame, modelJointList);
+				frame.transitionTime = jsonFrame.transition_time_ms;
+
+				foreach (PLEN.JSON.Output output in jsonFrame.outputs) {
+					PLEN.JointName parseJointName;
+					float angle;
+					try {
+						parseJointName = (PLEN.JointName)Enum.Parse(typeof(PLEN.JointName), output.device);
+						// 関節角度読み込み（左半身は回転量を反転）
+						angle = (float)output.value / 10;
+						if ((int)parseJointName < modelJointList.Count / 2)
+						angle *= -1;
+						
+						frame.JointRotate(parseJointName, angle);
+					} catch(Exception) {
+						return false;
+					}
+				}
+				frameList.Add (frame);
+
+			}
+			return true;
+		}catch(Exception) {
+			return false;
+		}
+	}
+
 	private void modelAllJointRotation(Frame frame) {
 		for (int i = 0; i < modelJointList.Count; i++)
 			modelJointList [i].transform.localEulerAngles = frame.jointAngles[i].eulerAngle;
 	}
+
 
 }
 
@@ -123,24 +177,24 @@ public class Frame {
 		jointAngles = new JointAngle[jointList.Count];
 		// 関節情報セット
 		// 左肩ロール，右肩ロールに関しては回転方向をヨーに（モデルの座標的に）
-		jointAngles [0]  =  new JointAngle (0 , 0, 0, 0, AdjustPossibleCoord.Yaw, jointList[0].transform.localEulerAngles);
-		jointAngles [1]  =  new JointAngle (1 , 0, 0, 0, AdjustPossibleCoord.Yaw, jointList[1].transform.localEulerAngles);
-		jointAngles [2]  =  new JointAngle (2 , 0, 0, 0, AdjustPossibleCoord.Roll, jointList[2].transform.localEulerAngles);
-		jointAngles [3]  =  new JointAngle (3 , 0, 0, 0, AdjustPossibleCoord.Roll, jointList[3].transform.localEulerAngles);
-		jointAngles [4]  =  new JointAngle (4 , 0, 0, 0, AdjustPossibleCoord.Roll, jointList[4].transform.localEulerAngles);
-		jointAngles [5]  =  new JointAngle (5 , 0, 0, 0, AdjustPossibleCoord.Pitch, jointList[5].transform.localEulerAngles);
-		jointAngles [6]  =  new JointAngle (6 , 0, 0, 0, AdjustPossibleCoord.Pitch, jointList[6].transform.localEulerAngles);
-		jointAngles [7]  =  new JointAngle (7 , 0, 0, 0, AdjustPossibleCoord.Pitch, jointList[7].transform.localEulerAngles);
-		jointAngles [8]  =  new JointAngle (8 , 0, 0, 0, AdjustPossibleCoord.Roll, jointList[8].transform.localEulerAngles);
-		jointAngles [9]  =  new JointAngle (9 , 0, 0, 0, AdjustPossibleCoord.Yaw, jointList[9].transform.localEulerAngles);
-		jointAngles [10] =  new JointAngle (10, 0, 0, 0, AdjustPossibleCoord.Yaw, jointList[10].transform.localEulerAngles);
-		jointAngles [11] =  new JointAngle (11, 0, 0, 0, AdjustPossibleCoord.Roll, jointList[11].transform.localEulerAngles);
-		jointAngles [12] =  new JointAngle (12, 0, 0, 0, AdjustPossibleCoord.Roll, jointList[12].transform.localEulerAngles);
-		jointAngles [13] =  new JointAngle (13, 0, 0, 0, AdjustPossibleCoord.Roll, jointList[13].transform.localEulerAngles);
-		jointAngles [14] =  new JointAngle (14, 0, 0, 0, AdjustPossibleCoord.Pitch, jointList[14].transform.localEulerAngles);
-		jointAngles [15] =  new JointAngle (15, 0, 0, 0, AdjustPossibleCoord.Pitch, jointList[15].transform.localEulerAngles);
-		jointAngles [16] =  new JointAngle (16, 0, 0, 0, AdjustPossibleCoord.Pitch, jointList[16].transform.localEulerAngles);
-		jointAngles [17] =  new JointAngle (17, 0, 0, 0, AdjustPossibleCoord.Roll, jointList[17].transform.localEulerAngles);
+		jointAngles [0]  =  new JointAngle (0 , AdjustPossibleCoord.Yaw, jointList[0].transform.localEulerAngles);
+		jointAngles [1]  =  new JointAngle (1 , AdjustPossibleCoord.Yaw, jointList[1].transform.localEulerAngles);
+		jointAngles [2]  =  new JointAngle (2 , AdjustPossibleCoord.Roll, jointList[2].transform.localEulerAngles);
+		jointAngles [3]  =  new JointAngle (3 , AdjustPossibleCoord.Roll, jointList[3].transform.localEulerAngles);
+		jointAngles [4]  =  new JointAngle (4 , AdjustPossibleCoord.Roll, jointList[4].transform.localEulerAngles);
+		jointAngles [5]  =  new JointAngle (5 , AdjustPossibleCoord.Pitch, jointList[5].transform.localEulerAngles);
+		jointAngles [6]  =  new JointAngle (6 , AdjustPossibleCoord.Pitch, jointList[6].transform.localEulerAngles);
+		jointAngles [7]  =  new JointAngle (7 , AdjustPossibleCoord.Pitch, jointList[7].transform.localEulerAngles);
+		jointAngles [8]  =  new JointAngle (8 , AdjustPossibleCoord.Roll, jointList[8].transform.localEulerAngles);
+		jointAngles [9]  =  new JointAngle (9 , AdjustPossibleCoord.Yaw, jointList[9].transform.localEulerAngles);
+		jointAngles [10] =  new JointAngle (10, AdjustPossibleCoord.Yaw, jointList[10].transform.localEulerAngles);
+		jointAngles [11] =  new JointAngle (11, AdjustPossibleCoord.Roll, jointList[11].transform.localEulerAngles);
+		jointAngles [12] =  new JointAngle (12, AdjustPossibleCoord.Roll, jointList[12].transform.localEulerAngles);
+		jointAngles [13] =  new JointAngle (13, AdjustPossibleCoord.Roll, jointList[13].transform.localEulerAngles);
+		jointAngles [14] =  new JointAngle (14, AdjustPossibleCoord.Pitch, jointList[14].transform.localEulerAngles);
+		jointAngles [15] =  new JointAngle (15, AdjustPossibleCoord.Pitch, jointList[15].transform.localEulerAngles);
+		jointAngles [16] =  new JointAngle (16, AdjustPossibleCoord.Pitch, jointList[16].transform.localEulerAngles);
+		jointAngles [17] =  new JointAngle (17, AdjustPossibleCoord.Roll, jointList[17].transform.localEulerAngles);
 
 
 		modelJointList = jointList;
@@ -152,9 +206,10 @@ public class Frame {
 		for (int i = 0; i < jointAngles.Length; i++)
 			jointAngles [i] = new JointAngle (baseFrame.jointAngles [i]);
 		modelJointList = jointList;
+		transitionTime = baseFrame.transitionTime;
 	}
 
-	public void JointRotate(JointName jointName, float angle) {
+	public void JointRotate(PLEN.JointName jointName, float angle) {
 		//Debug.Log (jointName.ToString () + " : " + angle.ToString ());
 
 		if (angle != 0.0f) {
@@ -181,13 +236,22 @@ public class Frame {
 			jointAngles [(int)jointName].Angle += angle;
 		}
 	}
+
+	public PLEN.JSON.Frame FrameJSONDataCreate() {
+		PLEN.JSON.Frame jsonFrame = new PLEN.JSON.Frame ();
+		jsonFrame.transition_time_ms = transitionTime;
+		foreach (JointAngle jointAngle in jointAngles) {
+			PLEN.JSON.Output jsonOutput = new PLEN.JSON.Output ();
+			jsonOutput.device = ((PLEN.JointName)(jointAngle.jointIndex)).ToString();
+			jsonOutput.value = (int)(jointAngle.Angle * -10);
+			jsonFrame.outputs.Add (jsonOutput);
+		}
+		return jsonFrame;
+	}
 }
 
 public class JointAngle {
 	public readonly int jointIndex;
-	public readonly int max;
-	public readonly int home;
-	public readonly int min;
 	public AdjustPossibleCoord coord;
 	public Vector3 eulerAngle; 
 
@@ -197,24 +261,21 @@ public class JointAngle {
 		}
 		set{
 			_angle = value;
+			while (_angle > 180)
+				_angle -= 360;
+			while (_angle < -180)
+				_angle += 360;
 		}
 	}
 	private float _angle;
 
-
-	public JointAngle(int _jointIndex, int _max, int _home, int _min, AdjustPossibleCoord _coord, Vector3 _eulerAngle) {
+	public JointAngle(int _jointIndex, AdjustPossibleCoord _coord, Vector3 _eulerAngle) {
 		jointIndex = _jointIndex;
-		max = _max;
-		home = _home;
-		min = _min;
 		coord = _coord;
 		eulerAngle = _eulerAngle;
 	}
 	public JointAngle(JointAngle baseJointAngle) {
 		jointIndex = baseJointAngle.jointIndex;
-		max = baseJointAngle.max;
-		home = baseJointAngle.home;
-		min = baseJointAngle.min;
 		coord = baseJointAngle.coord;
 		eulerAngle = baseJointAngle.eulerAngle;
 	}
@@ -225,26 +286,4 @@ public enum AdjustPossibleCoord {
 	Roll,
 	Pitch,
 	Yaw
-}
-
-
-public enum JointName {
-	LeftShoulderP,
-	LeftThighY,
-	LeftShoulderR,
-	LeftElbowR,
-	LeftThighR,
-	LeftThighP,
-	LeftKneeP,
-	LeftFootP,
-	LeftFootR,
-	RightShoulderP,
-	RightThighY,
-	RightShoulderR,
-	RightElbowR,
-	RightThighR,
-	RightThighP,
-	RightKneeP,
-	RightFootP,
-	RightFootR
 }

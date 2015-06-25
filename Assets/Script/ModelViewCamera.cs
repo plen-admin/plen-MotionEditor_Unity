@@ -21,6 +21,20 @@ public class ModelViewCamera : MonoBehaviour {
 	/// </summary>
 	public MotionData motionData;
 	/// <summary>
+	/// ダイアログインスタンス（インスペクタで初期化）
+	/// note...ダイアログ表示時は一切の操作を受け付けないようにする（誤作動防止のため）
+	/// </summary>
+	public DialogScript dialog;
+	/// <summary>
+	/// PLENモデルアニメーションインスタンス（インスペクタで初期化）
+	/// </summary>
+	public PLENModelAnimation plenAnimation;
+	/// <summary>
+	/// menuコントローラインスタンス（インスペクタで初期化）
+	/// Note...menuコントローラからwaitRequestがきてる場合，一切の操作を受け付けないようにする
+	/// </summary>
+	public MenuGUI menuGUI;
+	/// <summary>
 	/// マウスボタン押下フラグ(左，右，中）
 	/// </summary>
 	private bool[] isMouseDown = {false, false, false};
@@ -32,7 +46,6 @@ public class ModelViewCamera : MonoBehaviour {
 	/// 回転中心座標
 	/// </summary>
 	private Vector3 posRotationCenter;
-
 	/// <summary>
 	/// ズームゲイン値
 	/// </summary>
@@ -54,6 +67,7 @@ public class ModelViewCamera : MonoBehaviour {
 	/// </summary>
 	private  List<GameObject> AdjustableModelParts =  null;
 
+
 	/***** 初回実行メソッド（オーバーライド） *****/
 	void Start () {
 		// カメラの表示座標を調整（viewerPanelにぴったりはまるように調整）
@@ -65,14 +79,15 @@ public class ModelViewCamera : MonoBehaviour {
 
 	/***** 1フレームごとに呼び出されるメソッド（オーバーライド） *****/
 	void Update () {
-		// ホイールの回転量に合わせてカメラをズームイン（or ズームアウト）させる
-		transform.Translate (new Vector3 (0.0f, 0.0f, Input.GetAxis ("Mouse ScrollWheel")));
-
-
 		/*----- ここからマウスボタンのクリックイベント -----*/
-		// マウスポインタが指定のパネル内にあるか判定
-		if(viewerPanel.GetComponent<Collider2D>().OverlapPoint(Input.mousePosition))
-		{
+		// マウスポインタが指定のパネル内にあり，かつmenu（ダイアログ表示
+		// note...ダイアログ表示時は誤作動防止のため操作を無効にする
+		if (viewerPanel.GetComponent<Collider2D> ().OverlapPoint (Input.mousePosition)
+			&& menuGUI.isWaitRequest == false) {
+
+			// ホイールの回転量に合わせてカメラをズームイン（or ズームアウト）させる
+			transform.Translate (new Vector3 (0.0f, 0.0f, Input.GetAxis ("Mouse ScrollWheel")));
+
 			// 左ボタンクリック（画面回転）
 			// note : 回転中心をクリックした位置にすることで操作感を向上
 			if (Input.GetMouseButton (0)) {
@@ -85,13 +100,13 @@ public class ModelViewCamera : MonoBehaviour {
 					clickedModelPart = null;
 					RaycastHit hit;
 					// マウスのがクリックした方向へのベクトルを作成
-					Ray ray = this.GetComponent<Camera>().ScreenPointToRay (Input.mousePosition);
+					Ray ray = this.GetComponent<Camera> ().ScreenPointToRay (Input.mousePosition);
 					// マウスクリックした位置に何らかのオブジェクトがあるか判断（あった場合hitに情報が格納される．検知距離は適当に1000としている．）
 					// クリックした先にオブジェクトがあった場合，そのオブジェクトクリック位置を回転中心とする
 					if (Physics.Raycast (ray, out hit, 1000f)) {
 						// クリックしたオブジェクトが可動パーツか判定
 						foreach (GameObject adjustableModelPart in AdjustableModelParts) {
-							if (adjustableModelPart.GetComponent<Collider>() == hit.collider) {
+							if (adjustableModelPart.GetComponent<Collider> () == hit.collider) {
 								clickedModelPart = adjustableModelPart.transform;
 							}
 						}
@@ -108,8 +123,10 @@ public class ModelViewCamera : MonoBehaviour {
 					//可動パーツ以外をクリック
 					CameraRotation ();
 				} else {
-					// 可動パーツをクリック
-					JointRotation ();
+					// 可動パーツをクリック（アニメーション再生時は操作不可に）
+					if (plenAnimation.IsPlaying == false) {
+						JointRotation ();
+					}
 				}
 			} 
 			// 左ボタンリリース
@@ -123,7 +140,7 @@ public class ModelViewCamera : MonoBehaviour {
 				if (isMouseDown [1] == false) {
 					RaycastHit hit;
 					// マウスのがクリックした方向へのベクトルを作成
-					Ray ray = this.GetComponent<Camera>().ScreenPointToRay (Input.mousePosition);
+					Ray ray = this.GetComponent<Camera> ().ScreenPointToRay (Input.mousePosition);
 					// マウスクリックした位置に何らかのオブジェクトがあるか判断（あった場合hitに情報が格納される．検知距離は今回適当に1000としている．）
 					// クリックした先にオブジェクトがあった場合，物体との距離を格納
 					if (Physics.Raycast (ray, out hit, 1000f)) {
@@ -131,7 +148,7 @@ public class ModelViewCamera : MonoBehaviour {
 					} 
 					// なにもオブジェクトがない場合，モデルとの距離を格納
 					else
-						moveDistanceGain = Vector3.Distance(this.transform.position, lookAtModel.position);
+						moveDistanceGain = Vector3.Distance (this.transform.position, lookAtModel.position);
 					// 旧マウスポインタ座標を更新（この更新がないと予期せぬ位置に移動する）
 					posBefore = Input.mousePosition;
 					isMouseDown [1] = true;
@@ -145,18 +162,23 @@ public class ModelViewCamera : MonoBehaviour {
 			// 中ボタン押下（ズーム）
 			else if (Input.GetMouseButton (2)) {
 				//押下した瞬間
-				if(isMouseDown[2] == false) {
+				if (isMouseDown [2] == false) {
 					// 旧マウスポインタ座標を更新（この更新がないと予期せぬズームが行われる）
 					posBefore = Input.mousePosition;
-					isMouseDown[2] = true;
+					isMouseDown [2] = true;
 				}
 				CameraZoom ();
 			} 
 			// 中ボタンリリース
-			else if (isMouseDown[2] == true && Input.GetMouseButtonUp (2)) {
-				isMouseDown[2] = false;
+			else if (isMouseDown [2] == true && Input.GetMouseButtonUp (2)) {
+				isMouseDown [2] = false;
 			}
+		} else {
+			isMouseDown [0] = false;
+			isMouseDown [1] = false;
+			isMouseDown [2] = false;
 		}
+
 	}
 	/***** モデル平行移動メソッド *****/
 	private void ModelMove () {
@@ -205,7 +227,9 @@ public class ModelViewCamera : MonoBehaviour {
 		posBefore = Input.mousePosition;
 	}
 	private void JointRotation() {
-		JointName clickedJointName = clickedModelPart.GetComponent<JointParameter> ().Name;
+
+
+		PLEN.JointName clickedJointName = clickedModelPart.GetComponent<JointParameter> ().Name;
 	
 		motionData.frameList [motionData.index].JointRotate (clickedJointName, 
 			(Input.mousePosition.y - posBefore.y) * 2.0f);

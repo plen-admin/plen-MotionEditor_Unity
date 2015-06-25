@@ -8,11 +8,15 @@ public class FrameImgScript : MonoBehaviour {
 	public Frame thisFrame;
 	public Text labelFrame;
 	public Slider sliderTime;
-//	public Text labelTime;
 	public InputField inputFieldTime;
 	public PanelFramesScript parentPanelFrames;
 	public RenderTexture frameImgTex;
 	public GameObject btnRemoveObject;
+	/// <summary>
+	/// menuコントローラインスタンス（start()で初期化）
+	/// note...menuコントローラからwaitRequestがきてる場合，一切の操作を受け付けないようにする
+	/// </summary>
+	public MenuGUI menuGUI;
 	private int _index;
 	private const string FRAMEIMG_SAVE_PATH = "./tmp/frameImg/";
 
@@ -38,36 +42,37 @@ public class FrameImgScript : MonoBehaviour {
 	void Start () {
 		isActive = true;
 		parentPanelFrames = GameObject.Find ("PanelFrames").GetComponent<PanelFramesScript> ();
+		menuGUI = GameObject.Find ("/MenuController").GetComponent<MenuGUI> ();
 		if (!Directory.Exists (FRAMEIMG_SAVE_PATH)) {
 			Directory.CreateDirectory (FRAMEIMG_SAVE_PATH);
 		}
-
 	}
 	
 	// Update is called once per frame
 	void Update () {
-		if (Input.GetMouseButtonDown (0)) {
-			if(this.GetComponent<Collider2D> ().OverlapPoint(Input.mousePosition)
-				&& !btnRemoveObject.GetComponent<Collider2D>().OverlapPoint(Input.mousePosition)){
+		if (menuGUI.isWaitRequest == false) {
+			if (Input.GetMouseButtonDown (0)) {
+				if (this.GetComponent<Collider2D> ().OverlapPoint (Input.mousePosition)
+				    && !btnRemoveObject.GetComponent<Collider2D> ().OverlapPoint (Input.mousePosition)) {
 
-				parentPanelFrames.ChildFrameImgClick (index);
+					parentPanelFrames.ChildFrameImgClick (index);
+				}
 			}
 		}
 	}
 
 	public void BtnRemove_Click() {
-
-		if (parentPanelFrames.GetComponent<PanelFramesScript> ().FrameCount > 1) {
-
-			parentPanelFrames.GetComponent<PanelFramesScript> ().isFrameImgFadeOut = true;
-			this.GetComponent<Animator> ().SetBool ("isFadeOut", true);
-
-
-
+		if (menuGUI.isWaitRequest == false) {
+			PanelFramesScript panelFrames = parentPanelFrames.GetComponent<PanelFramesScript> ();
+			// フレームが2つ以上ある場合，自フレームを削除する
+			if (panelFrames.FrameCount > 1) {
+				panelFrames.isFramePlayingDestroyAnimation = true;
+				this.GetComponent<Animator> ().SetBool ("isDestroy", true);
+			}
 		}
 	}
 
-	private void EndFadeOut() {
+	private void EndDestroyAnimation() {
 		parentPanelFrames.ChildFrameImgDestroy (index);
 	}
 

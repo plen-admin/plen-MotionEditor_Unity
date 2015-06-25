@@ -4,7 +4,7 @@ using System.Collections;
 
 public class JointParameter : MonoBehaviour {
 
-	public JointName Name;
+	public PLEN.JointName Name;
 	// Use this for initialization
 	void Start () {
 
