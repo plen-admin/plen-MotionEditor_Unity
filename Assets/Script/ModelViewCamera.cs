@@ -5,6 +5,10 @@ using UnityEngine.UI;
 
 public class ModelViewCamera : MonoBehaviour { 
 	/// <summary>
+	/// 共通利用オブジェクト類管理インスタンス（インスペクタで初期化）
+	/// </summary>
+	public ObjectsController objectsController;
+	/// <summary>
 	/// カメラの映像を表示するスペースを示すパネル（インスペクタで初期化）
 	/// </summary>
 	public RectTransform viewerPanel;
@@ -16,24 +20,6 @@ public class ModelViewCamera : MonoBehaviour {
 	/// カメラが捉えたいオブジェクト（インスペクタで初期化）
 	/// </summary>
 	public Transform lookAtModel;
-	/// <summary>
-	/// モーションデータを管理するインスタンス（インスペクタで初期化）
-	/// </summary>
-	public MotionData motionData;
-	/// <summary>
-	/// ダイアログインスタンス（インスペクタで初期化）
-	/// note...ダイアログ表示時は一切の操作を受け付けないようにする（誤作動防止のため）
-	/// </summary>
-	public DialogScript dialog;
-	/// <summary>
-	/// PLENモデルアニメーションインスタンス（インスペクタで初期化）
-	/// </summary>
-	public PLENModelAnimation plenAnimation;
-	/// <summary>
-	/// menuコントローラインスタンス（インスペクタで初期化）
-	/// Note...menuコントローラからwaitRequestがきてる場合，一切の操作を受け付けないようにする
-	/// </summary>
-	public MenuGUI menuGUI;
 	/// <summary>
 	/// マウスボタン押下フラグ(左，右，中）
 	/// </summary>
@@ -83,7 +69,7 @@ public class ModelViewCamera : MonoBehaviour {
 		// マウスポインタが指定のパネル内にあり，かつmenu（ダイアログ表示
 		// note...ダイアログ表示時は誤作動防止のため操作を無効にする
 		if (viewerPanel.GetComponent<Collider2D> ().OverlapPoint (Input.mousePosition)
-			&& menuGUI.isWaitRequest == false) {
+			&& objectsController.isAllObjectWaitRequest == false) {
 
 			// ホイールの回転量に合わせてカメラをズームイン（or ズームアウト）させる
 			transform.Translate (new Vector3 (0.0f, 0.0f, Input.GetAxis ("Mouse ScrollWheel")));
@@ -93,7 +79,7 @@ public class ModelViewCamera : MonoBehaviour {
 			if (Input.GetMouseButton (0)) {
 				// モデル可動パーツリストを作成
 				if (AdjustableModelParts == null) {
-					AdjustableModelParts = new List<GameObject> (motionData.modelJointList);
+					AdjustableModelParts = new List<GameObject> (objectsController.motionData.modelJointList);
 				}
 				// 押下した瞬間
 				if (isMouseDown [0] == false) {
@@ -124,7 +110,7 @@ public class ModelViewCamera : MonoBehaviour {
 					CameraRotation ();
 				} else {
 					// 可動パーツをクリック（アニメーション再生時は操作不可に）
-					if (plenAnimation.IsPlaying == false) {
+					if (objectsController.plenAnimation.IsPlaying == false) {
 						JointRotation ();
 					}
 				}
@@ -227,11 +213,9 @@ public class ModelViewCamera : MonoBehaviour {
 		posBefore = Input.mousePosition;
 	}
 	private void JointRotation() {
-
-
 		PLEN.JointName clickedJointName = clickedModelPart.GetComponent<JointParameter> ().Name;
 	
-		motionData.frameList [motionData.index].JointRotate (clickedJointName, 
+		objectsController.motionData.frameList [objectsController.motionData.index].JointRotate (clickedJointName, 
 			(Input.mousePosition.y - posBefore.y) * 2.0f);
 		// 旧マウスポインタ座標更新
 		posBefore = Input.mousePosition;

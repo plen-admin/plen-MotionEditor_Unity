@@ -2,13 +2,17 @@
 using UnityEngine.UI;
 using System.Collections;
 
+public delegate void DialogFinishedEventHandler(bool isBtnOKClicked);
+
 public class DialogScript : MonoBehaviour {
+	public ObjectsController objectsController;
 	public Canvas displayCanvas;
 	public Text labelTitle;
 	public Text labelMessage;
 	public bool isBtnClicked = false;
 	public bool isActive = false;
 	public bool returnValue;
+	public event DialogFinishedEventHandler DialogFinished;
 
 	// Use this for initialization
 	void Start () {
@@ -16,6 +20,7 @@ public class DialogScript : MonoBehaviour {
 	}
 
 	public void Show(string title, string message) {
+		objectsController.isDialogShowing = true;
 		isBtnClicked = false;
 		isActive = true;
 		returnValue = false;
@@ -29,6 +34,8 @@ public class DialogScript : MonoBehaviour {
 		isBtnClicked = true;
 		returnValue = true;
 		isActive = false;
+		DialogFinished (true);
+		objectsController.isDialogShowing = false;
 	}
 
 	public void BtnCancel_Click() {
@@ -36,6 +43,8 @@ public class DialogScript : MonoBehaviour {
 		isBtnClicked = true;
 		returnValue = false;
 		isActive = false;
+		DialogFinished (false);
+		objectsController.isDialogShowing = false;
 	}
 
 	// Update is called once per frame

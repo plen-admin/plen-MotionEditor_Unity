@@ -5,6 +5,7 @@ using System.IO;
 
 
 public class FrameImgScript : MonoBehaviour {
+	public ObjectsController objectsController;
 	public Frame thisFrame;
 	public Text labelFrame;
 	public Slider sliderTime;
@@ -12,15 +13,15 @@ public class FrameImgScript : MonoBehaviour {
 	public PanelFramesScript parentPanelFrames;
 	public RenderTexture frameImgTex;
 	public GameObject btnRemoveObject;
-	/// <summary>
-	/// menuコントローラインスタンス（start()で初期化）
-	/// note...menuコントローラからwaitRequestがきてる場合，一切の操作を受け付けないようにする
-	/// </summary>
-	public MenuGUI menuGUI;
+	private Collider2D thisCollider;
+	private Button[] btnArray;
 	private int _index;
 	private const string FRAMEIMG_SAVE_PATH = "./tmp/frameImg/";
 
+
 	private bool isActive;
+	private bool isReplace;
+	private bool isWait;
 	public bool isFadeOuted;
 
 	public int index {
@@ -41,8 +42,12 @@ public class FrameImgScript : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 		isActive = true;
+		isReplace = false;
+		isWait = false;
+		thisCollider = this.GetComponent<Collider2D> ();
+		btnArray = this.GetComponentsInChildren<Button> ();
+		objectsController = GameObject.Find ("ObjectsController").GetComponent<ObjectsController> ();
 		parentPanelFrames = GameObject.Find ("PanelFrames").GetComponent<PanelFramesScript> ();
-		menuGUI = GameObject.Find ("/MenuController").GetComponent<MenuGUI> ();
 		if (!Directory.Exists (FRAMEIMG_SAVE_PATH)) {
 			Directory.CreateDirectory (FRAMEIMG_SAVE_PATH);
 		}
@@ -50,7 +55,22 @@ public class FrameImgScript : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		if (menuGUI.isWaitRequest == false) {
+		if (objectsController.isFrameRelationWaitRequest == true) {
+			if (isWait == false) {
+				foreach (Button btn in btnArray)
+					btn.enabled = false;
+				thisCollider.enabled = false;
+				isWait = true;
+			}
+		} else if(isWait == true) {
+			foreach (Button btn in btnArray)
+				btn.enabled = true;
+			thisCollider.enabled = true;
+			isWait = false;
+		}
+
+
+		if (objectsController.isAllObjectWaitRequest == false) {
 			if (Input.GetMouseButtonDown (0)) {
 				if (this.GetComponent<Collider2D> ().OverlapPoint (Input.mousePosition)
 				    && !btnRemoveObject.GetComponent<Collider2D> ().OverlapPoint (Input.mousePosition)) {
@@ -60,9 +80,29 @@ public class FrameImgScript : MonoBehaviour {
 			}
 		}
 	}
+	public void BtnBack_Click() {
+		if (index > 0) {
+			isReplace = true;
+			SaveFrameImgTex ();
+			FrameImgTexPngReplace (index, index - 1);
+			objectsController.panelFrames.FrameImgReplace (index, index - 1);
+			isReplace = false;
+		}
+	}
+
+	public void BtnNext_Click() {
+		if (index < objectsController.panelFrames.FrameCount - 1) {
+			isReplace = true;
+			SaveFrameImgTex ();
+			FrameImgTexPngReplace (index, index + 1);
+			objectsController.panelFrames.FrameImgReplace (index, index + 1);
+			isReplace = false;
+		}
+	}
+
 
 	public void BtnRemove_Click() {
-		if (menuGUI.isWaitRequest == false) {
+		if (objectsController.isAllObjectWaitRequest == false) {
 			PanelFramesScript panelFrames = parentPanelFrames.GetComponent<PanelFramesScript> ();
 			// フレームが2つ以上ある場合，自フレームを削除する
 			if (panelFrames.FrameCount > 1) {
@@ -85,15 +125,17 @@ public class FrameImgScript : MonoBehaviour {
 				isActive = true;
 			} else {
 				thisRawImg.texture = ReadFrameImgTexPng ();
+				isActive = false;
 			}
 		} else {
 			RawImage thisRawImg = this.GetComponent<RawImage> ();
 			thisRawImg.color = new Color (0.5f, 0.5f, 0.5f, 0.5f);
-			if (isActive == true) {
+			if (isReplace == true) {
+				thisRawImg.texture = ReadFrameImgTexPng ();
+			} else if (isActive == true) {
 				if (isAnimating == false) {
 					SaveFrameImgTex ();
 				}
-
 				thisRawImg.texture = ReadFrameImgTexPng ();
 			}
 			isActive = false;
@@ -124,6 +166,10 @@ public class FrameImgScript : MonoBehaviour {
 		}
 	}
 
+	public FrameImgScript Clone() {
+		return (FrameImgScript)MemberwiseClone ();
+	}
+
 	public void SaveFrameImgTex() {
 		// モデル画像保存
 		RenderTexture renderTexRT = RenderTexture.active;
@@ -135,6 +181,8 @@ public class FrameImgScript : MonoBehaviour {
 		Destroy (saveTex);
 		RenderTexture.active = renderTexRT;
 	}
+
+
 	private Texture ReadFrameImgTexPng() {
 		if (!File.Exists (FRAMEIMG_SAVE_PATH + index.ToString () + ".png"))
 			return null;
@@ -146,5 +194,23 @@ public class FrameImgScript : MonoBehaviour {
 		readPngTex.LoadImage (binaryPng);
 		readStream.Close ();
 		return readPngTex;
+	}
+
+	private void FrameImgTexPngReplace(int srcIndex, int detIndex) {
+		string srcPath = FRAMEIMG_SAVE_PATH + srcIndex.ToString () + ".png";
+		string dstPath = FRAMEIMG_SAVE_PATH + detIndex.ToString () + ".png";
+		string tmpPath = FRAMEIMG_SAVE_PATH + "tmp";
+
+		if (!File.Exists (srcPath) || !File.Exists (dstPath))
+			return;
+
+		while (File.Exists (tmpPath + ".png")) {
+			tmpPath += "0";
+		}
+		tmpPath += ".png";
+
+		File.Move (srcPath, tmpPath);
+		File.Move (dstPath, srcPath);
+		File.Move (tmpPath, dstPath);
 	}
 }

@@ -80,15 +80,15 @@ public class MotionData : MonoBehaviour {
 	public void CreateNewFrame(int newFrameIndex = -1, int baseFrameIndex = -1) {
 		Frame baseFrame;
 		if (baseFrameIndex < 0 || frameList.Count == 0)
-			baseFrame = defaultFrame;
+			baseFrame = DefaultFrame;
 		else
 			baseFrame = frameList [baseFrameIndex];
 		
 		if (newFrameIndex < 0) {
-			frameList.Add (new Frame (baseFrame, modelJointList));
+			frameList.Add (new Frame (baseFrame));
 			index = frameList.Count - 1;
 		} else {
-			frameList.Insert (newFrameIndex, new Frame (baseFrame, modelJointList));
+			frameList.Insert (newFrameIndex, new Frame (baseFrame));
 			index = newFrameIndex;
 		}
 	}
@@ -97,12 +97,15 @@ public class MotionData : MonoBehaviour {
 		modelAllJointRotation (frameList [index]);
 	}
 
-	public void FrameInitialize(int initIndex) {
+	public void FrameInitialize(int initIndex, bool isTransitionTimeReset = false) {
 		//frameList [index] = DefaultFrame;
 		// 
 		for (int i = 0; i < DefaultFrame.jointAngles.Length; i++)
 			frameList [initIndex].jointAngles [i] = new JointAngle(DefaultFrame.jointAngles [i]);
-		
+
+		if (isTransitionTimeReset == true)
+			frameList [initIndex].transitionTime = DefaultFrame.transitionTime;
+
 		modelAllJointRotation (frameList [initIndex]);
 	}
 	public void FrameRemove(int removeIndex) {
@@ -133,7 +136,7 @@ public class MotionData : MonoBehaviour {
 			frameList.Clear ();
 
 			foreach (PLEN.JSON.Frame jsonFrame in jsonMain.frames) {
-				Frame frame = new Frame (defaultFrame, modelJointList);
+				Frame frame = new Frame (DefaultFrame);
 				frame.transitionTime = jsonFrame.transition_time_ms;
 
 				foreach (PLEN.JSON.Output output in jsonFrame.outputs) {
@@ -143,10 +146,9 @@ public class MotionData : MonoBehaviour {
 						parseJointName = (PLEN.JointName)Enum.Parse(typeof(PLEN.JointName), output.device);
 						// 関節角度読み込み（左半身は回転量を反転）
 						angle = (float)output.value / 10;
-						if ((int)parseJointName < modelJointList.Count / 2)
-						angle *= -1;
+						//if ((int)parseJointName < modelJointList.Count / 2)
 						
-						frame.JointRotate(parseJointName, angle);
+						frame.JointRotate(parseJointName, angle, false);
 					} catch(Exception) {
 						return false;
 					}
@@ -200,29 +202,33 @@ public class Frame {
 		modelJointList = jointList;
 	}
 
-	public Frame(Frame baseFrame, List<GameObject> jointList) {
-		jointAngles = new JointAngle[jointList.Count];
+	public Frame(Frame baseFrame) {
+		jointAngles = new JointAngle[baseFrame.modelJointList.Count];
 
 		for (int i = 0; i < jointAngles.Length; i++)
 			jointAngles [i] = new JointAngle (baseFrame.jointAngles [i]);
-		modelJointList = jointList;
+		modelJointList = baseFrame.modelJointList;
 		transitionTime = baseFrame.transitionTime;
 	}
 
-	public void JointRotate(PLEN.JointName jointName, float angle) {
+	public void JointRotate(PLEN.JointName jointName, float angle, bool isAdjust = true) {
 		//Debug.Log (jointName.ToString () + " : " + angle.ToString ());
 
 		if (angle != 0.0f) {
-			if ((int)jointName >= modelJointList.Count / 2)
-				angle *= -1;
+			if (isAdjust == true) {
+				if ((int)jointName >= modelJointList.Count / 2)
+					angle *= -1;
 			
+				if (jointName == JointName.left_shoulder_roll || jointName == JointName.right_shoulder_roll)
+					angle *= -1;
+			}
 			switch (jointAngles [(int)jointName].coord) {
 			//x
-			case AdjustPossibleCoord.Pitch:
+			case AdjustPossibleCoord.Roll:
 				jointAngles [(int)jointName].eulerAngle += new Vector3 (-angle, 0.0f, 0.0f);
 				break;
 			// y
-			case AdjustPossibleCoord.Roll:
+			case AdjustPossibleCoord.Pitch:
 				jointAngles [(int)jointName].eulerAngle += new Vector3 (0.0f, angle, 0.0f);
 				break;
 			//z
@@ -243,10 +249,13 @@ public class Frame {
 		foreach (JointAngle jointAngle in jointAngles) {
 			PLEN.JSON.Output jsonOutput = new PLEN.JSON.Output ();
 			jsonOutput.device = ((PLEN.JointName)(jointAngle.jointIndex)).ToString();
-			jsonOutput.value = (int)(jointAngle.Angle * -10);
+			jsonOutput.value = (int)(jointAngle.Angle * 10);
 			jsonFrame.outputs.Add (jsonOutput);
 		}
 		return jsonFrame;
+	}
+	public Frame Clone() {
+		return (Frame)MemberwiseClone ();
 	}
 }
 

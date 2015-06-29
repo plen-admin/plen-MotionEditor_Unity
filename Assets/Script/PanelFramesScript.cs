@@ -5,13 +5,13 @@ using System.Collections.Generic;
 
 public class PanelFramesScript : MonoBehaviour {
 	/// <summary>
+	/// 共通利用オブジェクト類管理インスタンス（インスペクタで初期化）
+	/// </summary>
+	public ObjectsController objectsController;
+	/// <summary>
 	/// frameImgのプレハブ（インスペクタで初期化）
 	/// </summary>
 	public GameObject frameImgPrefub;
-	/// <summary>
-	/// モーションデータを管理するインスタンス（インスペクタで初期化）
-	/// </summary>
-	public MotionData motionData;
 	/// <summary>
 	/// モーションデータを管理するインスタンス（インスペクタで初期化）
 	/// </summary>
@@ -38,6 +38,9 @@ public class PanelFramesScript : MonoBehaviour {
 	/// frameImgリスト
 	/// </summary>
 	public List<GameObject> frameImgList = new List<GameObject> ();
+	public int FrameCount {
+		get { return frameImgList.Count; }
+	}
 	/// <summary>
 	/// 現在選択中のframeImgのindex
 	/// </summary>
@@ -51,27 +54,21 @@ public class PanelFramesScript : MonoBehaviour {
 	/// </summary>
 	private bool isRequestToMoveScrollBar = false;
 	/// <summary>
-	/// アニメーション再生中フラグ
-	/// </summary>
-	public bool isAnimationPlaying = false;
-	/// <summary>
 	/// 先頭フレームから末端フレームまでの幅
 	/// </summary>
 	private float layoutAreaWidth;
 	private BoxCollider2D layoutAreaCollider;
 	private RectTransform thisRectTransform;
 	private RectTransform layoutAreaRectTransfrom;
-
-	public int FrameCount {
-		get { return frameImgList.Count; }
-	}
-		
+	private int replaceSrcIndex;
+	private int replaceDstIndex;
 
 	// Use this for initialization
 	void Start () {
 		// インスタンス類初期化
 		thisRectTransform = this.GetComponent<RectTransform> ();
 		layoutAreaRectTransfrom = layoutArea.GetComponent<RectTransform> ();
+		layoutAreaCollider = layoutArea.GetComponent<BoxCollider2D> ();
 		// 初期フレーム作成
 		selectedIndex = 0;
 		CreateNewFrameImg (0);
@@ -80,10 +77,10 @@ public class PanelFramesScript : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		// menuコントローラからwaitRequestが発生していないことを確認
-		if(menuGUI.isWaitRequest == false) {
+		// Frame関連の待機リクエストがあるか判定
+		if(objectsController.isFrameRelationWaitRequest == false) {
 			// マウスクリックを検知し，フレーム削除中でない，かつアニメーション再生時でないことを確認
-			if (Input.GetMouseButtonUp (0) && isFramePlayingDestroyAnimation == false && isAnimationPlaying == false) {
+			if (Input.GetMouseButtonUp (0) && isFramePlayingDestroyAnimation == false && objectsController.isAnimationPlaying == false) {
 				// フレームがクリックされていなく，かつフレーム表示区域をクリック → 新規フレーム作成
 				if (isChildFrameImgClicked == false && this.GetComponent<Collider2D>().OverlapPoint(Input.mousePosition)) {
 					int createIndex = -1;	// 作成されるフレームのインデックス
@@ -94,12 +91,16 @@ public class PanelFramesScript : MonoBehaviour {
 						// Note...これによりフレームとフレームの隙間をクリックしたことを判定できる
 						if (hits [i].collider == layoutAreaCollider) {
 							// クリック位置のx座標を取得（クリック座標は画面の座標を基準としているので，基準をフレーム表示区域に）
-							float clickPosX = hits[i].point.x * (thisRectTransform.rect.width / Screen.width);
+							//float clickPosX = hits[i].point.x * (thisRectTransform.rect.width / Screen.width);
+							float clickPosX = Input.mousePosition.x * (thisRectTransform.rect.width / Screen.width);
 							// フレーム表示区域のスクロール量を検知し，スクロール分座標を追加する
 							float normalizedPos = this.GetComponent<ScrollRect>().horizontalNormalizedPosition;
 							clickPosX += normalizedPos * (layoutAreaWidth - thisRectTransform.rect.width + framePadding);
 							// どのフレームの間がクリックされたか判定．フレーム作成位置を決定
 							for (int j = 0; j < frameImgList.Count; j++) {
+
+								Debug.Log ("Mouse : " + clickPosX.ToString () +
+									"   layout : " + ((j + 1) * layoutAreaWidth / frameImgList.Count).ToString());
 								if (clickPosX < (j + 1) * layoutAreaWidth / frameImgList.Count) {
 									createIndex = j;
 									break;
@@ -130,7 +131,6 @@ public class PanelFramesScript : MonoBehaviour {
 		// Note...Content Size FilterによりlayoutAreaのWidthが可変的，かつサイズ変更のタイミングが不明なため，
 		//        Colliderのサイズ調整が必要．
 		layoutAreaWidth = layoutAreaRectTransfrom.rect.width - framePadding;
-		layoutAreaCollider = layoutArea.GetComponent<BoxCollider2D> ();
 		layoutAreaCollider.size = new Vector2 (layoutAreaWidth, layoutAreaCollider.size.y);
 		layoutAreaCollider.offset = new Vector2 (layoutAreaWidth / 2, 0f);
 	}
@@ -141,13 +141,14 @@ public class PanelFramesScript : MonoBehaviour {
 		while (frameImgList.Count > 1) {
 			ChildFrameImgDestroy (0);
 		}
-		motionData.FrameInitialize (0);
+		objectsController.motionData.FrameInitialize (0, true);
+		frameImgList [0].GetComponent<FrameImgScript> ().sliderTime.value = objectsController.motionData.frameList [0].transitionTime;
 	}
 	/// <summary>
 	/// 現在選択中のフレームを初期化する（モデルを初期位置にする）メソッド
 	/// </summary>
 	public void FrameInitialize() {
-		motionData.FrameInitialize (selectedIndex);
+		objectsController.motionData.FrameInitialize (selectedIndex);
 	}
 	/// <summary>
 	/// フレーム表示区域スクロール検知メソッド（イベント発生）
@@ -162,14 +163,14 @@ public class PanelFramesScript : MonoBehaviour {
 	}
 
 	public bool MotionFramesRead(string motionJsonStr) {
-		if (motionData.MotionJSONDataRead (motionJsonStr) == false)
+		if (objectsController.motionData.MotionJSONDataRead (motionJsonStr) == false)
 			return false;
 		foreach (GameObject frameImg in frameImgList) {
 			Destroy (frameImg);
 		}
 		frameImgList.Clear ();
 
-		for (int i = 0; i < motionData.frameList.Count; i++) {
+		for (int i = 0; i < objectsController.motionData.frameList.Count; i++) {
 			CreateNewFrameImg (i, true);
 		}
 		StartCoroutine (FrameImgTexInitialize());
@@ -182,9 +183,9 @@ public class PanelFramesScript : MonoBehaviour {
 	/// </summary>
 	public void FrameGoBack() {
 		if (selectedIndex > 0) {
-			selectedIndex--;
-			CallSelectedFrameImgChanged ();
-			motionData.ChangeSelectFrame (selectedIndex);
+			objectsController.plenAnimation.AnimationPlay (selectedIndex, selectedIndex - 1);
+//			CallSelectedFrameImgChanged ();
+//			motionData.ChangeSelectFrame (selectedIndex);
 		}
 	}
 	/// <summary>
@@ -192,9 +193,9 @@ public class PanelFramesScript : MonoBehaviour {
 	/// </summary>
 	public void FrameGoNext() {
 		if (selectedIndex < frameImgList.Count - 1) {
-			selectedIndex++;
-			CallSelectedFrameImgChanged ();
-			motionData.ChangeSelectFrame (selectedIndex);
+			objectsController.plenAnimation.AnimationPlay (selectedIndex, selectedIndex + 1);
+//			CallSelectedFrameImgChanged ();
+//			motionData.ChangeSelectFrame (selectedIndex);
 		}
 	}
 	/// <summary>
@@ -211,7 +212,7 @@ public class PanelFramesScript : MonoBehaviour {
 		// フレームオブジェクト破棄．リストから除去．
 		Destroy (frameImgList [destroyIndex]);
 		frameImgList.RemoveAt (destroyIndex);
-		motionData.FrameRemove (destroyIndex);
+		objectsController.motionData.FrameRemove (destroyIndex);
 		// 各フレームのインデックスを再設定（影響のあるフレームのみ）
 		for (int i = destroyIndex; i < frameImgList.Count; i++) {
 			frameImgList [i].GetComponent<FrameImgScript> ().index = i;
@@ -224,11 +225,11 @@ public class PanelFramesScript : MonoBehaviour {
 		if (selectedIndex > frameImgList.Count - 1) {
 			selectedIndex = frameImgList.Count - 1;
 			CallSelectedFrameImgChanged ();
-			motionData.ChangeSelectFrame (selectedIndex);
+			objectsController.motionData.ChangeSelectFrame (selectedIndex);
 		}
 		else if (selectedIndex == destroyIndex) {
 			CallSelectedFrameImgChanged ();
-			motionData.ChangeSelectFrame (selectedIndex);
+			objectsController.motionData.ChangeSelectFrame (selectedIndex);
 		}
 	}
 
@@ -236,18 +237,16 @@ public class PanelFramesScript : MonoBehaviour {
 		selectedIndex = frameIndex;
 		isChildFrameImgClicked = true;
 		CallSelectedFrameImgChanged ();
-		motionData.ChangeSelectFrame (selectedIndex);
+		objectsController.motionData.ChangeSelectFrame (selectedIndex);
 	}
 
 	public void PlayAnimationEnded(int endClipIndex) {
-		isAnimationPlaying = false;
 		selectedIndex = endClipIndex;
 		CallSelectedFrameImgChanged (false);
-		motionData.ChangeSelectFrame (selectedIndex);
+		objectsController.motionData.ChangeSelectFrame (selectedIndex);
 	}
 
 	public void AnimationStarted(int startClipIndex) {
-		isAnimationPlaying = true;
 		frameImgList [selectedIndex].GetComponent<FrameImgScript> ().SaveFrameImgTex ();
 		selectedIndex = startClipIndex;
 		CallSelectedFrameImgChanged (true);
@@ -256,6 +255,29 @@ public class PanelFramesScript : MonoBehaviour {
 	public void AnimationClipChanged(int changeClipIndex) {
 		selectedIndex = changeClipIndex;
 		CallSelectedFrameImgChanged (true);
+	}
+
+	public void FrameImgReplace(int srcIndex, int dstIndex) {
+		selectedIndex = srcIndex;
+
+		FrameImgScript srcFrameImg = frameImgList [srcIndex].GetComponent<FrameImgScript> ();
+		FrameImgScript dstFrameImg = frameImgList [dstIndex].GetComponent<FrameImgScript>();
+		//Frame srcFrame = objectsController.motionData.frameList [srcIndex].Clone ();
+		Frame srcFrame = new Frame (objectsController.motionData.frameList [srcIndex]);
+
+		objectsController.motionData.frameList [srcIndex] = objectsController.motionData.frameList [dstIndex];
+		objectsController.motionData.frameList [dstIndex] = srcFrame;
+
+		dstFrameImg.index = dstIndex;
+		srcFrameImg.index = srcIndex;
+		dstFrameImg.thisFrame = objectsController.motionData.frameList [dstIndex];
+		srcFrameImg.thisFrame = objectsController.motionData.frameList [srcIndex];
+		dstFrameImg.sliderTime.value = dstFrameImg.thisFrame.transitionTime;
+		srcFrameImg.sliderTime.value = srcFrameImg.thisFrame.transitionTime;
+
+		selectedIndex = dstIndex;
+		CallSelectedFrameImgChanged (false);
+		objectsController.motionData.ChangeSelectFrame (selectedIndex);
 	}
 
 	private void CallSelectedFrameImgChanged(bool isAnimating = false) {
@@ -277,12 +299,12 @@ public class PanelFramesScript : MonoBehaviour {
 			frameImg.transform.localScale = new Vector3 (1f, 1f, 1f);
 		}
 		if (isFrameDataExist == false)
-			motionData.CreateNewFrame (createIndex, selectedIndex);
+			objectsController.motionData.CreateNewFrame (createIndex, selectedIndex);
 		else
-			motionData.ChangeSelectFrame (createIndex);
+			objectsController.motionData.ChangeSelectFrame (createIndex);
 
 		for (int i = 0; i < frameImgList.Count; i++)
-			frameImgList [i].GetComponent<FrameImgScript> ().thisFrame = motionData.frameList [i];
+			frameImgList [i].GetComponent<FrameImgScript> ().thisFrame = objectsController.motionData.frameList [i];
 
 		FrameImgScript newFrameImg = frameImgList [createIndex].GetComponent<FrameImgScript> ();
 		newFrameImg.sliderTime.value = newFrameImg.thisFrame.transitionTime;
@@ -296,12 +318,12 @@ public class PanelFramesScript : MonoBehaviour {
 	private IEnumerator FrameImgTexInitialize() {
 		for (int i = 1; i < frameImgList.Count; i++) {
 			selectedIndex = i;
-			motionData.ChangeSelectFrame (i);
+			objectsController.motionData.ChangeSelectFrame (i);
 			CallSelectedFrameImgChanged (false);
 			yield return null;
 		}
 		selectedIndex = 0;
-		motionData.ChangeSelectFrame (0);
+		objectsController.motionData.ChangeSelectFrame (0);
 		CallSelectedFrameImgChanged (false);
 	}
 }

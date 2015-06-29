@@ -176,13 +176,13 @@ public class FileChooser : MonoBehaviour
 	}
 
 	public void OpenFileDialog_Show() {
-	OpenFileDialogFinished("", "未実装の機能です”);
+		OpenFileDialogFinished("", "未実装の機能です");
 	}
 
 	public void SaveFileDialog_Show() {
-
-	OpenFileDialogFinished("", "未実装の機能です”);
+		OpenFileDialogFinished ("", "未実装の機能です");
 	}
+
 	#elif UNITY_STANDALONE_LINUX
 	void Start()
 	{
