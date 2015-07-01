@@ -33,27 +33,12 @@ public class FileChooser : MonoBehaviour
 	/// </summary>
 	public const string SCRIPT_CHOOSE_FILE = 
 		"-e 'do shell script \"php -r \\\"echo urlencode(\\\\\\\"\" & ((POSIX path of (choose file)) as text) &  \"\\\\\\\");\\\"\"'";
-/*		"on run argv\n" +
-		"set fpath to ((POSIX path of (choose file)) as text)\n" +
-		"return (do shell script \"php -r 'echo urlencode(\\\"\" & fpath & \"\\\");'\")\n" +
-		"end run";
-*/	/// <summary>
+	/// <summary>
 	/// 保存先フォルダ選択・保存ファイル名取得，保存ファイルパス保存スクリプト(applescript記述)
 	/// </summary>
 	public const string SCRIPT_SAVE_FILE =
 		"-e 'do shell script \"php -r \\\"echo urlencode(\\\\\\\"\" & ((POSIX path of (choose file name)) as text) &  \"\\\\\\\");\\\"\"'";
-/*		"on run argv\n" +
-		"set fpath to ((POSIX path of (choose file name)) as text)\n" + 
-		"return (do shell script \"php -r 'echo urlencode(\\\"\" & fpath & \"\\\");'\")\n" +
-		"end run";
-*/	/// <summary>
-	/// スクリプトファイル保存先パス
-	/// </summary>
-	string scriptPath = "./tmp/script.scpt";
-	/// <summary>
-	/// スクリプト戻り値ファイル保存先パス
-	/// </summary>
-	string scriptReturnValuePath = "./tmp/chooseFile.txt";
+
 
 	void Start() {
 	}
@@ -63,7 +48,6 @@ public class FileChooser : MonoBehaviour
 	/// 終了通知は"OpenFileDialogFinished"イベントにて行う
 	/// </summary>
 	public void OpenFileDialog_Show() {
-//		string scriptFullPath = scriptFileCreate (SCRIPT_CHOOSE_FILE);
 		// getPathDialogを実行
 		// Note...プログラムが固まるのを防止するためコルーチンにて実行
 		StartCoroutine (getPathDialog (SCRIPT_CHOOSE_FILE, (string path, string errorMessage) => {
@@ -76,8 +60,6 @@ public class FileChooser : MonoBehaviour
 	/// 終了通知は"SaveFileDialogFinished"イベントにて行う
 	/// </summary>
 	public void SaveFileDialog_Show() {
-//		string striptFullPath = scriptFileCreate (SCRIPT_SAVE_FILE);
-
 		// getPathDialogを実行
 		// Note...プログラムが固まるのを防止するためコルーチンにて実行
 		StartCoroutine (getPathDialog (SCRIPT_SAVE_FILE, (string path, string errorMessage) => {
@@ -85,41 +67,13 @@ public class FileChooser : MonoBehaviour
 			SaveFileDialogFinished(path, errorMessage);
 		}));
 	}
-
-	/// <summary>
-	/// スクリプトファイル作成メソッド
-	/// </summary>
-	/// <returns>作成先の絶対パス</returns>
-	/// <param name="script">スクリプトファイルに書き込みたいスクリプト</param>
-	private string scriptFileCreate(string script) {
-		// スクリプトファイル作成（作成済みであれば自動的に元ファイルが削除される）
-		using (FileStream stream = File.Create(scriptPath)) {
-			using (StreamWriter writer = new StreamWriter (stream)) {
-				// スクリプト書き込み
-				writer.WriteLine (script);
-				writer.Close ();
-			}
-		}
-		return Path.GetFullPath (scriptPath);
-	}
-	/// <summary>
-	/// スクリプト戻り値ファイル作成メソッド
-	/// </summary>
-	/// <returns>作成先の絶対パス</returns>
-	private string scriptReturnValueFileCreate() {
-		// スクリプト戻り値ファイル作成（作成済みであれば自動的に元ファイルが削除される）
-		using (System.IO.FileStream stream = System.IO.File.Create (scriptReturnValuePath)) {
-			stream.Close ();
-		}
-		return Path.GetFullPath (scriptReturnValuePath);
-	}
 	/// <summary>
 	/// getPathDialogメソッド (コルーチン実行)
 	/// </summary>
-	/// <param name="scriptPath">Script絶対パス</param>
+	/// <param name="script">スクリプト(AppleScript)</param>
 	/// <param name="argv">スクリプト引数</param>
 	/// <param name="onClosed">終了通知</param>
-	public IEnumerator getPathDialog (string scriptPath, System.Action<string, string> onClosed)
+	public IEnumerator getPathDialog (string script, System.Action<string, string> onClosed)
 	{
 		Process fileDialog = new Process ();				// fileDialogプロセス
 		StringBuilder path = new StringBuilder ();			// 取得したファイルパス
@@ -128,7 +82,7 @@ public class FileChooser : MonoBehaviour
 		fileDialog.StartInfo = new ProcessStartInfo ()
 		{
 			FileName = "osascript",			// 実行app (osascript : Applescriptを実行するmac標準app)
-			Arguments = scriptPath,			// 実行appへの引数 (osascriptの第一引数がスクリプトのパス．第二引数がスクリプトへの引数）
+			Arguments = script,				// 実行appへの引数 (スクリプト自体)
 			CreateNoWindow = true,			// terminalは非常にする
 			UseShellExecute = false,		// シェル機能を使用しない
 			RedirectStandardOutput = true,	// スクリプトからの戻り値を受信する
