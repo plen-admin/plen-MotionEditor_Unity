@@ -8,14 +8,19 @@ public class MenuGUI : MonoBehaviour {
 	public ObjectsController objectsController;
 	public GameObject panelMenu;
 	public Image uiDisabledMaskImg;
+	public InputField inputFieldSlot;
+	private int slotNum = 0;
+	private const int SLOT_MINIMIZE = 0;
+	private const int SLOT_MAXIMIZE = 99;
 	private Vector2 clickPos;
-
 	private Button[] btnArray;
 	private FileChooser fileChooser;
 	private bool isBtnsDisabled;
 
 	// Use this for initialization
 	void Start () {
+		inputFieldSlot.text = slotNum.ToString ();
+
 		fileChooser = this.GetComponent<FileChooser> ();
 		btnArray = panelMenu.GetComponentsInChildren<Button> ();
 
@@ -146,6 +151,34 @@ public class MenuGUI : MonoBehaviour {
 	}
 	public void BtnMS_Click()
 	{
+	}
+	
+	public void InputFieldSlotUpdate() {
+		int tmp;
+
+		if (int.TryParse (inputFieldSlot.text, out tmp)) {
+			if (tmp > SLOT_MAXIMIZE) {
+				slotNum = SLOT_MAXIMIZE;
+				inputFieldSlot.text = SLOT_MAXIMIZE.ToString ();
+			} else if (tmp < SLOT_MINIMIZE) {
+				slotNum = SLOT_MINIMIZE;
+				inputFieldSlot.text = SLOT_MINIMIZE.ToString ();
+			} else {
+				slotNum = tmp;
+			}
+			objectsController.motionData.slotNum = slotNum;
+		} else {
+			inputFieldSlot.text = slotNum.ToString();
+		}
+	}
+
+	public void InputFieldSlotUpdate(int value = int.MinValue) {
+		if (value >= SLOT_MINIMIZE && value <= SLOT_MAXIMIZE) {
+			slotNum = value;
+			inputFieldSlot.text = value.ToString();
+			objectsController.motionData.slotNum = value;
+		}
+
 	}
 
 }

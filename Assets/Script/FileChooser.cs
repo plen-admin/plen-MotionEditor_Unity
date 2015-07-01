@@ -130,11 +130,39 @@ public class FileChooser : MonoBehaviour
 	}
 
 	public void OpenFileDialog_Show() {
-		OpenFileDialogFinished("", "未実装の機能です");
+//		OpenFileDialogFinished("", "未実装の機能です");
+		StartCoroutine (getOpenFilePath((string path, string errorMassage) => {
+			OpenFileDialogFinished(path, errorMassage);
+		}));
 	}
 
 	public void SaveFileDialog_Show() {
-		OpenFileDialogFinished ("", "未実装の機能です");
+		StartCoroutine (getSaveFilePath ((string Path, string errorMassage) => {
+			SaveFileDialogFinished (Path, errorMassage);
+		}));
+	}
+
+	public IEnumerator getOpenFilePath(System.Action<string, string> onClosed) {
+		System.Windows.Forms.OpenFileDialog fileDialog = new System.Windows.Forms.OpenFileDialog ();
+
+		yield return null;
+
+		if (fileDialog.ShowDialog () == System.Windows.Forms.DialogResult.OK) {
+			onClosed.Invoke (fileDialog.FileName, "");
+		} else {
+			onClosed.Invoke ("", "Cancel");
+		}
+	}	
+	public IEnumerator getSaveFilePath(System.Action<string, string> onClosed) {
+		System.Windows.Forms.SaveFileDialog fileDialog = new System.Windows.Forms.SaveFileDialog ();
+		
+		yield return null;
+		
+		if (fileDialog.ShowDialog () == System.Windows.Forms.DialogResult.OK) {
+			onClosed.Invoke (fileDialog.FileName, "");
+		} else {
+			onClosed.Invoke ("", "Cancel");
+		}
 	}
 
 	#elif UNITY_STANDALONE_LINUX

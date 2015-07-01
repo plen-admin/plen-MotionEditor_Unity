@@ -6,7 +6,7 @@ using LitJson;
 using PLEN;
 
 public class MotionData : MonoBehaviour {
-	public List<Frame> frameList =  new List<Frame>();
+	public ObjectsController objectsController;
 
 	// 関節オブジェクト類（これらにセットされているオブジェクトの角度を変更していく）（インスペクタで初期化）
 	public GameObject LeftShoulderP;
@@ -42,6 +42,8 @@ public class MotionData : MonoBehaviour {
 	/// (LeftShoulderP，...，RightFootR(18関節)がリスト化されている)
 	/// </summary>
 	public List<GameObject> modelJointList = new List<GameObject> ();
+	public List<Frame> frameList =  new List<Frame>();
+	public int slotNum;
 	/// <summary>
 	/// 初期状態フレーム（プロパティ用のインスタンス）
 	/// </summary>
@@ -116,8 +118,8 @@ public class MotionData : MonoBehaviour {
 
 	public string MotionJSONDataCreate(string savePath) {
 		PLEN.JSON.Main jsonMain = new PLEN.JSON.Main ();
-		jsonMain.name = "Sample";
-		jsonMain.slot = 0;
+		jsonMain.name = "TestMotion";
+		jsonMain.slot = slotNum;
 		foreach (Frame frame in frameList) {
 			jsonMain.frames.Add(frame.FrameJSONDataCreate());
 		}
@@ -156,6 +158,7 @@ public class MotionData : MonoBehaviour {
 				frameList.Add (frame);
 
 			}
+			objectsController.menuController.InputFieldSlotUpdate(jsonMain.slot);
 			return true;
 		}catch(Exception) {
 			return false;
