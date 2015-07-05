@@ -7,7 +7,7 @@ public class ModelViewCamera : MonoBehaviour {
 	/// <summary>
 	/// 共通利用オブジェクト類管理インスタンス（インスペクタで初期化）
 	/// </summary>
-	public ObjectsController objectsController;
+	public ObjectsController objects;
 	/// <summary>
 	/// カメラの映像を表示するスペースを示すパネル（インスペクタで初期化）
 	/// </summary>
@@ -35,7 +35,7 @@ public class ModelViewCamera : MonoBehaviour {
 	/// <summary>
 	/// ズームゲイン値
 	/// </summary>
-	private const float ZOOM_GAIN = 0.2f;
+	private const float ZOOM_GAIN = 0.05f;
 	/// <summary>
 	/// オブジェクト並行移動ゲイン値
 	/// </summary>
@@ -61,6 +61,12 @@ public class ModelViewCamera : MonoBehaviour {
 		                             , 1 - viewerPanel.rect.height / viewerCanvas.rect.height
 		                             , viewerPanel.rect.width / viewerCanvas.rect.width
 		                              , viewerPanel.rect.height / viewerCanvas.rect.height);
+		
+		// ViewerPanelのColliderを調整（画面解像度により大きさが変わるので）
+		BoxCollider2D collider = viewerPanel.GetComponent<BoxCollider2D> ();
+		Rect rect = viewerPanel.GetComponent<RectTransform> ().rect;
+		collider.size = rect.size;
+		collider.offset = new Vector2 (rect.width / 2, rect.height / 2);
 	}
 
 	/***** 1フレームごとに呼び出されるメソッド（オーバーライド） *****/
@@ -69,7 +75,7 @@ public class ModelViewCamera : MonoBehaviour {
 		// マウスポインタが指定のパネル内にあり，かつmenu（ダイアログ表示
 		// note...ダイアログ表示時は誤作動防止のため操作を無効にする
 		if (viewerPanel.GetComponent<Collider2D> ().OverlapPoint (Input.mousePosition)
-			&& objectsController.isAllObjectWaitRequest == false) {
+			&& objects.isAllObjectWaitRequest == false) {
 
 			// ホイールの回転量に合わせてカメラをズームイン（or ズームアウト）させる
 			transform.Translate (new Vector3 (0.0f, 0.0f, Input.GetAxis ("Mouse ScrollWheel")));
@@ -79,7 +85,7 @@ public class ModelViewCamera : MonoBehaviour {
 			if (Input.GetMouseButton (0)) {
 				// モデル可動パーツリストを作成
 				if (AdjustableModelParts == null) {
-					AdjustableModelParts = new List<GameObject> (objectsController.motionData.modelJointList);
+					AdjustableModelParts = new List<GameObject> (objects.motionData.modelJointList);
 				}
 				// 押下した瞬間
 				if (isMouseDown [0] == false) {
@@ -100,7 +106,8 @@ public class ModelViewCamera : MonoBehaviour {
 					} 
 					// クリックした位置に何もなかった場合，カメラの中央を回転中心とする
 					else
-						posRotationCenter = this.transform.TransformDirection (this.transform.forward);
+						posRotationCenter = lookAtModel.position;
+//						posRotationCenter = this.transform.TransformDirection (this.transform.forward);
 					// 旧マウスポインタ座標を更新（この更新がないとカメラが予期せぬ方向に回転する）
 					posBefore = Input.mousePosition;
 					isMouseDown [0] = true;
@@ -110,7 +117,7 @@ public class ModelViewCamera : MonoBehaviour {
 					CameraRotation ();
 				} else {
 					// 可動パーツをクリック（アニメーション再生時は操作不可に）
-					if (objectsController.plenAnimation.IsPlaying == false) {
+					if (objects.plenAnimation.IsPlaying == false) {
 						JointRotation ();
 					}
 				}
@@ -174,15 +181,17 @@ public class ModelViewCamera : MonoBehaviour {
 		// 旧マウスポインタ座標更新
 		posBefore = Input.mousePosition;
 	}
+	// カメラズームメソッド
 	private void CameraZoom() {
 		// カメラズーム（マウスポインタの座標変異に応じてズーム量を調整）
 		transform.Translate (new Vector3 (0.0f, 0.0f, ZOOM_GAIN * (Input.mousePosition.y - posBefore.y)));
 		// 旧マウスポインタ座標更新
 		posBefore = Input.mousePosition;
 	}
-
+	/// <summary>
+	///  カメラ回転メソッド
+	/// </summary>
 	private void CameraRotation() {
-
 		// マウスポインタ座標の差異を取得，回転座標化
 		Vector3 eulerAngle = new Vector3 (Input.mousePosition.y - posBefore.y, Input.mousePosition.x - posBefore.x, 0.00f);
 		// 回転前のカメラの情報を保存する
@@ -197,12 +206,7 @@ public class ModelViewCamera : MonoBehaviour {
 		// 縦方向の回転はカメラのローカル座標系のX軸で回転する
 		this.transform.RotateAround (posRotationCenter, this.transform.right, -eulerAngle.x);
 
-		// カメラを注視点に向ける
-		//trans.LookAt (forward);
-
-		// ジンバルロック対策
-		// カメラが真上や真下を向くとジンバルロックがおきる
-		// ジンバルロックがおきるとカメラがぐるぐる回ってしまうので、一度に90度以上回るような計算結果になった場合は回転しないようにする(計算を元に戻す)
+		// 　ジンバルロック対策
 		Vector3 up = this.transform.up;
 		if (Vector3.Angle (preUpV, up) > 90.0f) {
 			this.transform.localEulerAngles = preAngle;
@@ -212,10 +216,14 @@ public class ModelViewCamera : MonoBehaviour {
 		// 旧マウスポインタ座標更新
 		posBefore = Input.mousePosition;
 	}
+	/// <summary>
+	///  関節オブジェクト回転メソッド
+	/// </summary>
 	private void JointRotation() {
+		// 選択した関節名を取得
 		PLEN.JointName clickedJointName = clickedModelPart.GetComponent<JointParameter> ().Name;
-	
-		objectsController.motionData.frameList [objectsController.motionData.index].JointRotate (clickedJointName, 
+		// オブジェクト回転（回転量はマウスy座標の変位量）
+		objects.motionData.frameList [objects.motionData.index].JointRotate (clickedJointName, 
 			(Input.mousePosition.y - posBefore.y) * 2.0f);
 		// 旧マウスポインタ座標更新
 		posBefore = Input.mousePosition;

@@ -6,7 +6,7 @@ using LitJson;
 using PLEN;
 
 public class MotionData : MonoBehaviour {
-	public ObjectsController objectsController;
+	public ObjectsController objects;
 
 	// 関節オブジェクト類（これらにセットされているオブジェクトの角度を変更していく）（インスペクタで初期化）
 	public GameObject LeftShoulderP;
@@ -78,14 +78,19 @@ public class MotionData : MonoBehaviour {
 
 	void Update() {
 	}
-
+	/// <summary>
+	///  新規フレーム作成メソッド
+	/// </summary>
+	/// <param name="newFrameIndex">作成インデックス（0未満：最終フレームへ）</param>
+	/// <param name="baseFrameIndex">ベースとなるフレームのインデックス（0未満：初期状態フレーム）</param>
 	public void CreateNewFrame(int newFrameIndex = -1, int baseFrameIndex = -1) {
 		Frame baseFrame;
+		//  ベースとなるフレームを設定
 		if (baseFrameIndex < 0 || frameList.Count == 0)
 			baseFrame = DefaultFrame;
 		else
 			baseFrame = frameList [baseFrameIndex];
-		
+		// フレーム作成．リストに追加
 		if (newFrameIndex < 0) {
 			frameList.Add (new Frame (baseFrame));
 			index = frameList.Count - 1;
@@ -94,13 +99,21 @@ public class MotionData : MonoBehaviour {
 			index = newFrameIndex;
 		}
 	}
+	/// <summary>
+	///  選択中フレーム変更メソッド
+	/// </summary>
+	/// <param name="selectedIndex">選択フレームインデックス</param>
 	public void ChangeSelectFrame(int selectedIndex) {
+		// インデックス変更．モデル回転．
 		index = selectedIndex;
 		modelAllJointRotation (frameList [index]);
 	}
-
+	/// <summary>
+	///  フレーム初期化メソッド
+	/// </summary>
+	/// <param name="initIndex">初期化フレームインデックス</param>
+	/// <param name="isTransitionTimeReset"> <c>true</c> : TransitionTimeも初期化 </param>
 	public void FrameInitialize(int initIndex, bool isTransitionTimeReset = false) {
-		//frameList [index] = DefaultFrame;
 		// 
 		for (int i = 0; i < DefaultFrame.jointAngles.Length; i++)
 			frameList [initIndex].jointAngles [i] = new JointAngle(DefaultFrame.jointAngles [i]);
@@ -110,146 +123,200 @@ public class MotionData : MonoBehaviour {
 
 		modelAllJointRotation (frameList [initIndex]);
 	}
+	/// <summary>
+	/// フレーム削除メソッド
+	/// </summary>
+	/// <param name="removeIndex">削除フレームインデックス</param>
 	public void FrameRemove(int removeIndex) {
 		frameList.RemoveAt (removeIndex);
 		if (index > frameList.Count - 1)
 			index = frameList.Count - 1;
 	}
-
-	public string MotionJSONDataCreate(string savePath) {
+	/// <summary>
+	/// モーションファイル（JSON）データ作成メソッド
+	/// </summary>
+	/// <returns>JSONモーションファイルデータ</returns>
+	public string MotionJSONDataCreate(string name) {
+		// 各種設定
 		PLEN.JSON.Main jsonMain = new PLEN.JSON.Main ();
-		jsonMain.name = "TestMotion";
+		jsonMain.name = name;
 		jsonMain.slot = slotNum;
 		foreach (Frame frame in frameList) {
 			jsonMain.frames.Add(frame.FrameJSONDataCreate());
 		}
-
+		// JSONデータを返す(string)
 		return JsonMapper.ToJson (jsonMain);
-
 	}
-
+	/// <summary>
+	/// モーションファイル(JSON)読み込みメソッド
+	/// </summary>
+	/// <returns><c>true</c> : 読み込み成功 <c>false</c> 読み込み失敗</returns>
+	/// <param name="jsonStr">JSONデータの文字列</param>
 	public bool MotionJSONDataRead(string jsonStr) {
 		try {
+			// JSONファイル読み込み
 			PLEN.JSON.Main jsonMain = LitJson.JsonMapper.ToObject<PLEN.JSON.Main> (jsonStr);
-
+			// 読み込み失敗
 			if (jsonMain == null)
 				return false;
 	
+			/*-- ここから読み込んだJSONファイルをMotionDataに変換 --*/
+			// 全フレームを初期化
 			frameList.Clear ();
-
+			// JSONファイルに記述されていたフレーム数ループ
 			foreach (PLEN.JSON.Frame jsonFrame in jsonMain.frames) {
+				// ベースフレームは初期状態フレームを使用（その後読み込んだangle値で回転させる）
 				Frame frame = new Frame (DefaultFrame);
 				frame.transitionTime = jsonFrame.transition_time_ms;
-
+				// JSONファイルから読み込んだフレームから各関節の情報を読み取り，設定を行う
 				foreach (PLEN.JSON.Output output in jsonFrame.outputs) {
 					PLEN.JointName parseJointName;
 					float angle;
 					try {
+						// JSONファイル中のdevice情報をJointName型に変換
 						parseJointName = (PLEN.JointName)Enum.Parse(typeof(PLEN.JointName), output.device);
 						// 関節角度読み込み（左半身は回転量を反転）
 						angle = (float)output.value / 10;
 						//if ((int)parseJointName < modelJointList.Count / 2)
-						
-						frame.JointRotate(parseJointName, angle, false);
+						// 読み込んだ角度情報をもとに関節を回転
+						frame.JointRotate(parseJointName, angle, true);
 					} catch(Exception) {
 						return false;
 					}
 				}
+				// 読み込みが完了したフレームをリストに追加
 				frameList.Add (frame);
 
 			}
-			objectsController.menuController.InputFieldSlotUpdate(jsonMain.slot);
+			// スロット番号更新
+			objects.menuController.InputFieldSlotUpdate(jsonMain.slot);
 			return true;
 		}catch(Exception) {
 			return false;
 		}
 	}
-
+	/// <summary>
+	/// 全関節オブジェクト回転メソッド（オブジェクトの回転のみ）
+	/// </summary>
+	/// <param name="frame">ベースとなるFrame</param>
 	private void modelAllJointRotation(Frame frame) {
 		for (int i = 0; i < modelJointList.Count; i++)
 			modelJointList [i].transform.localEulerAngles = frame.jointAngles[i].eulerAngle;
 	}
-
-
 }
 
 public class Frame {
+	/// <summary>
+	/// 関節配列
+	/// </summary>
 	public JointAngle[] jointAngles;
+	/// <summary>
+	/// フレーム遷移時間
+	/// </summary>
 	public int transitionTime = 1000;
+	/// <summary>
+	/// 関節オブジェクトリスト
+	/// </summary>
 	private List<GameObject> modelJointList;
 
+	private readonly int[] DATA_ROTATE_DIRECTION = { 1, 1, -1, 1, -1, 1, 1, -1 ,1, -1, -1, 1, -1, 1, -1, -1, 1, -1 }; 
+	private readonly int[] DISP_ROTATE_DIRECTION =  { -1, -1, -1, 1, -1, -1, -1, 1, 1, 1, 1, 1, -1, 1, 1, 1, -1, -1 };
+	/// <summary>
+	/// コンストラクタ
+	/// </summary>
+	/// <param name="jointList">関節オブジェクトリスト</param>
 	public Frame(List<GameObject> jointList) {
 		jointAngles = new JointAngle[jointList.Count];
 		// 関節情報セット
-		// 左肩ロール，右肩ロールに関しては回転方向をヨーに（モデルの座標的に）
-		jointAngles [0]  =  new JointAngle (0 , AdjustPossibleCoord.Yaw, jointList[0].transform.localEulerAngles);
-		jointAngles [1]  =  new JointAngle (1 , AdjustPossibleCoord.Yaw, jointList[1].transform.localEulerAngles);
-		jointAngles [2]  =  new JointAngle (2 , AdjustPossibleCoord.Roll, jointList[2].transform.localEulerAngles);
-		jointAngles [3]  =  new JointAngle (3 , AdjustPossibleCoord.Roll, jointList[3].transform.localEulerAngles);
-		jointAngles [4]  =  new JointAngle (4 , AdjustPossibleCoord.Roll, jointList[4].transform.localEulerAngles);
-		jointAngles [5]  =  new JointAngle (5 , AdjustPossibleCoord.Pitch, jointList[5].transform.localEulerAngles);
-		jointAngles [6]  =  new JointAngle (6 , AdjustPossibleCoord.Pitch, jointList[6].transform.localEulerAngles);
-		jointAngles [7]  =  new JointAngle (7 , AdjustPossibleCoord.Pitch, jointList[7].transform.localEulerAngles);
-		jointAngles [8]  =  new JointAngle (8 , AdjustPossibleCoord.Roll, jointList[8].transform.localEulerAngles);
-		jointAngles [9]  =  new JointAngle (9 , AdjustPossibleCoord.Yaw, jointList[9].transform.localEulerAngles);
-		jointAngles [10] =  new JointAngle (10, AdjustPossibleCoord.Yaw, jointList[10].transform.localEulerAngles);
-		jointAngles [11] =  new JointAngle (11, AdjustPossibleCoord.Roll, jointList[11].transform.localEulerAngles);
-		jointAngles [12] =  new JointAngle (12, AdjustPossibleCoord.Roll, jointList[12].transform.localEulerAngles);
-		jointAngles [13] =  new JointAngle (13, AdjustPossibleCoord.Roll, jointList[13].transform.localEulerAngles);
-		jointAngles [14] =  new JointAngle (14, AdjustPossibleCoord.Pitch, jointList[14].transform.localEulerAngles);
-		jointAngles [15] =  new JointAngle (15, AdjustPossibleCoord.Pitch, jointList[15].transform.localEulerAngles);
-		jointAngles [16] =  new JointAngle (16, AdjustPossibleCoord.Pitch, jointList[16].transform.localEulerAngles);
-		jointAngles [17] =  new JointAngle (17, AdjustPossibleCoord.Roll, jointList[17].transform.localEulerAngles);
-
-
+		// 左肩ピッチ，右肩ピッチに関しては回転方向をヨーに（モデルの座標的に）
+		jointAngles [0]  =  new JointAngle (0 , RotationCoord.Yaw, jointList[0].transform.localEulerAngles);
+		jointAngles [1]  =  new JointAngle (1 , RotationCoord.Yaw, jointList[1].transform.localEulerAngles);
+		jointAngles [2]  =  new JointAngle (2 , RotationCoord.Roll, jointList[2].transform.localEulerAngles);
+		jointAngles [3]  =  new JointAngle (3 , RotationCoord.Roll, jointList[3].transform.localEulerAngles);
+		jointAngles [4]  =  new JointAngle (4 , RotationCoord.Roll, jointList[4].transform.localEulerAngles);
+		jointAngles [5]  =  new JointAngle (5 , RotationCoord.Pitch, jointList[5].transform.localEulerAngles);
+		jointAngles [6]  =  new JointAngle (6 , RotationCoord.Pitch, jointList[6].transform.localEulerAngles);
+		jointAngles [7]  =  new JointAngle (7 , RotationCoord.Pitch, jointList[7].transform.localEulerAngles);
+		jointAngles [8]  =  new JointAngle (8 , RotationCoord.Roll, jointList[8].transform.localEulerAngles);
+		jointAngles [9]  =  new JointAngle (9 , RotationCoord.Yaw, jointList[9].transform.localEulerAngles);
+		jointAngles [10] =  new JointAngle (10, RotationCoord.Yaw, jointList[10].transform.localEulerAngles);
+		jointAngles [11] =  new JointAngle (11, RotationCoord.Roll, jointList[11].transform.localEulerAngles);
+		jointAngles [12] =  new JointAngle (12, RotationCoord.Roll, jointList[12].transform.localEulerAngles);
+		jointAngles [13] =  new JointAngle (13, RotationCoord.Roll, jointList[13].transform.localEulerAngles);
+		jointAngles [14] =  new JointAngle (14, RotationCoord.Pitch, jointList[14].transform.localEulerAngles);
+		jointAngles [15] =  new JointAngle (15, RotationCoord.Pitch, jointList[15].transform.localEulerAngles);
+		jointAngles [16] =  new JointAngle (16, RotationCoord.Pitch, jointList[16].transform.localEulerAngles);
+		jointAngles [17] =  new JointAngle (17, RotationCoord.Roll, jointList[17].transform.localEulerAngles);
 		modelJointList = jointList;
 	}
-
+	/// <summary>
+	/// コンストラクタ（ベースフレームあり）
+	/// </summary>
+	/// <param name="baseFrame">ベースとなるフレームBase frame.</param>
 	public Frame(Frame baseFrame) {
 		jointAngles = new JointAngle[baseFrame.modelJointList.Count];
-
+		// 
 		for (int i = 0; i < jointAngles.Length; i++)
 			jointAngles [i] = new JointAngle (baseFrame.jointAngles [i]);
 		modelJointList = baseFrame.modelJointList;
 		transitionTime = baseFrame.transitionTime;
 	}
-
-	public void JointRotate(PLEN.JointName jointName, float angle, bool isAdjust = true) {
-		//Debug.Log (jointName.ToString () + " : " + angle.ToString ());
+	/// <summary>
+	///  関節回転メソッド（angle値も更新）
+	/// </summary>
+	/// <param name="jointName">回転関節名</param>
+	/// <param name="angle">回転角度</param>
+	/// <param name="isAdjust"><c>true</c> : 左右でangle値を反転する</param>
+	public void JointRotate(PLEN.JointName jointName, float angle, bool isMotionDataRead = false) {
+		float dispAngle = angle;
+		int jointIndex = (int)jointName;
 
 		if (angle != 0.0f) {
-			if (isAdjust == true) {
-				if ((int)jointName >= modelJointList.Count / 2)
-					angle *= -1;
 			
-				if (jointName == JointName.left_shoulder_roll || jointName == JointName.right_shoulder_roll)
-					angle *= -1;
+			// パーツによって回転方向が異なるため，angle値を調整
+			if (isMotionDataRead == false) {
+				dispAngle *= DISP_ROTATE_DIRECTION [jointIndex];
+			} else {
+				dispAngle *= DATA_ROTATE_DIRECTION [jointIndex] * DISP_ROTATE_DIRECTION [jointIndex];
 			}
-			switch (jointAngles [(int)jointName].coord) {
+			// 回転オイラー角を生成
+			switch (jointAngles [jointIndex].coord) {
 			//x
-			case AdjustPossibleCoord.Roll:
-				jointAngles [(int)jointName].eulerAngle += new Vector3 (-angle, 0.0f, 0.0f);
+			case RotationCoord.Roll:
+				jointAngles [jointIndex].eulerAngle += new Vector3 (-dispAngle, 0.0f, 0.0f);
 				break;
 			// y
-			case AdjustPossibleCoord.Pitch:
-				jointAngles [(int)jointName].eulerAngle += new Vector3 (0.0f, angle, 0.0f);
+			case RotationCoord.Pitch:
+				jointAngles [jointIndex].eulerAngle += new Vector3 (0.0f, dispAngle, 0.0f);
 				break;
 			//z
-			case AdjustPossibleCoord.Yaw:
-				jointAngles [(int)jointName].eulerAngle += new Vector3 (0.0f, 0.0f, angle);
+			case RotationCoord.Yaw:
+				jointAngles [jointIndex].eulerAngle += new Vector3 (0.0f, 0.0f, dispAngle);
 				break;
 			default:
 				break;
 			}
-			modelJointList [(int)jointName].transform.localEulerAngles = jointAngles [(int)jointName].eulerAngle;
-			jointAngles [(int)jointName].Angle += angle;
+			// 関節オブジェクト回転
+			modelJointList [jointIndex].transform.localEulerAngles = jointAngles [jointIndex].eulerAngle;
+			// angle値更新
+			if (isMotionDataRead == false) {
+				jointAngles [jointIndex].Angle += angle * DATA_ROTATE_DIRECTION [jointIndex];
+			} else {
+				jointAngles [jointIndex].Angle += angle;
+			}
 		}
 	}
-
+	/// <summary>
+	/// モーションファイル(JSON)用データ生成メソッド
+	/// </summary>
+	/// <returns>JSON用データ</returns>
 	public PLEN.JSON.Frame FrameJSONDataCreate() {
+		// インスタンス作成．遷移時間設定．
 		PLEN.JSON.Frame jsonFrame = new PLEN.JSON.Frame ();
 		jsonFrame.transition_time_ms = transitionTime;
+		// 各関節データをJSONデータに変換．
 		foreach (JointAngle jointAngle in jointAngles) {
+			// 各種情報をJSONデータに変換
 			PLEN.JSON.Output jsonOutput = new PLEN.JSON.Output ();
 			jsonOutput.device = ((PLEN.JointName)(jointAngle.jointIndex)).ToString();
 			jsonOutput.value = (int)(jointAngle.Angle * 10);
@@ -257,16 +324,31 @@ public class Frame {
 		}
 		return jsonFrame;
 	}
+	/// <summary>
+	/// フレームインスタンスクローンメソッド
+	/// </summary>
 	public Frame Clone() {
 		return (Frame)MemberwiseClone ();
 	}
 }
 
 public class JointAngle {
+	/// <summary>
+	///  関節番号（読み取り専用）
+	/// </summary>
 	public readonly int jointIndex;
-	public AdjustPossibleCoord coord;
+	/// <summary>
+	/// 回転方向
+	/// </summary>
+	public RotationCoord coord;
+	/// <summary>
+	/// 回転オイラー角
+	/// </summary>
 	public Vector3 eulerAngle; 
-
+	/// <summary>
+	/// 関節の初期位置からの角度（-180＜Angle＜180）
+	/// </summary>
+	/// <value>The angle.</value>
 	public float Angle {
 		get{
 			return _angle;
@@ -280,12 +362,21 @@ public class JointAngle {
 		}
 	}
 	private float _angle;
-
-	public JointAngle(int _jointIndex, AdjustPossibleCoord _coord, Vector3 _eulerAngle) {
+	/// <summary>
+	/// コンストラクタ
+	/// </summary>
+	/// <param name="_jointIndex">関節番号</param>
+	/// <param name="_coord">回転方向</param>
+	/// <param name="_eulerAngle">初期オイラー角</param>
+	public JointAngle(int _jointIndex, RotationCoord _coord, Vector3 _eulerAngle) {
 		jointIndex = _jointIndex;
 		coord = _coord;
 		eulerAngle = _eulerAngle;
 	}
+	/// <summary>
+	/// コンストラクタ（ベースとなるJointAngleあり）
+	/// </summary>
+	/// <param name="baseJointAngle">ベースとなるJointAngle</param>
 	public JointAngle(JointAngle baseJointAngle) {
 		jointIndex = baseJointAngle.jointIndex;
 		coord = baseJointAngle.coord;
@@ -293,8 +384,10 @@ public class JointAngle {
 	}
 }
 
-
-public enum AdjustPossibleCoord {
+/// <summary>
+/// 関節回転方向
+/// </summary>
+public enum RotationCoord {
 	Roll,
 	Pitch,
 	Yaw

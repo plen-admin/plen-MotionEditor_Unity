@@ -83,7 +83,7 @@ public class FileChooser : MonoBehaviour
 		{
 			FileName = "osascript",			// 実行app (osascript : Applescriptを実行するmac標準app)
 			Arguments = script,				// 実行appへの引数 (スクリプト自体)
-			CreateNoWindow = true,			// terminalは非常にする
+			CreateNoWindow = true,			// terminalは非表示にする
 			UseShellExecute = false,		// シェル機能を使用しない
 			RedirectStandardOutput = true,	// スクリプトからの戻り値を受信する
 			RedirectStandardError = true,	// スクリプトのエラーメッセージを受信する
@@ -124,47 +124,54 @@ public class FileChooser : MonoBehaviour
 		onClosed.Invoke (path.ToString (), errorMessage.ToString());
 	}
 
+	// WindwosでのFileDialog実装(.NET (Mono))
 	#elif UNITY_STANDALONE_WIN
 	void Start()
 	{
 	}
-
+	/// <summary>
+	/// OpenFileDialog呼び出しメソッド
+	/// 終了通知は"OpenFileDialogFinished"イベントにて行う
+	/// </summary>
 	public void OpenFileDialog_Show() {
-//		OpenFileDialogFinished("", "未実装の機能です");
-		StartCoroutine (getOpenFilePath((string path, string errorMassage) => {
+		StartCoroutine (getFilePath(true, (string path, string errorMassage) => {
 			OpenFileDialogFinished(path, errorMassage);
 		}));
 	}
-
+	/// <summary>
+	/// SaveFileDialog呼び出しメソッド
+	/// 終了通知は"SaveFileDialogFinished"イベントにて行う
+	/// </summary>
 	public void SaveFileDialog_Show() {
-		StartCoroutine (getSaveFilePath ((string Path, string errorMassage) => {
+		StartCoroutine (getFilePath (false, (string Path, string errorMassage) => {
 			SaveFileDialogFinished (Path, errorMassage);
 		}));
 	}
+	/// <summary>
+	/// FileDialog呼び出しメソッド (コルーチン実行)
+	/// </summary>
+	/// <param name="isModeOpen">true...OpenFileDialog, false...SaveFileDialog</param>
+	/// <param name="onClosed">終了通知</param>
+	public IEnumerator getFilePath(bool isModeOpen, System.Action<string, string> onClosed) {
+		System.Windows.Forms.FileDialog fileDialog;
+		// fileDialogインスタンス生成（isModeOpen : true...Open, false...Save）
+		if (isModeOpen == true) {
+			fileDialog = new System.Windows.Forms.OpenFileDialog ();
+		} else {
+			fileDialog = new System.Windows.Forms.SaveFileDialog ();
+		}
 
-	public IEnumerator getOpenFilePath(System.Action<string, string> onClosed) {
-		System.Windows.Forms.OpenFileDialog fileDialog = new System.Windows.Forms.OpenFileDialog ();
-
+		fileDialog.Filter =  "JSON files (*.json)|*.json|All files (*.*)|*.*";
+		// 1フレーム待機
 		yield return null;
-
+		// fileDialog表示．OKボタンが押された場合取得したfilePathを戻り値として返す
+		// Cancelされた場合エラーを返す
 		if (fileDialog.ShowDialog () == System.Windows.Forms.DialogResult.OK) {
 			onClosed.Invoke (fileDialog.FileName, "");
 		} else {
 			onClosed.Invoke ("", "Cancel");
 		}
 	}	
-	public IEnumerator getSaveFilePath(System.Action<string, string> onClosed) {
-		System.Windows.Forms.SaveFileDialog fileDialog = new System.Windows.Forms.SaveFileDialog ();
-		
-		yield return null;
-		
-		if (fileDialog.ShowDialog () == System.Windows.Forms.DialogResult.OK) {
-			onClosed.Invoke (fileDialog.FileName, "");
-		} else {
-			onClosed.Invoke ("", "Cancel");
-		}
-	}
-
 	#elif UNITY_STANDALONE_LINUX
 	void Start()
 	{

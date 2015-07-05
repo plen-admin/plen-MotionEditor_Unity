@@ -5,6 +5,7 @@ Obj/
 UnityGenerated/
 Library/
 tmp/
+Assets/tmp/
 
 # ===================================== #
 # Visual Studio / MonoDevelop generated #

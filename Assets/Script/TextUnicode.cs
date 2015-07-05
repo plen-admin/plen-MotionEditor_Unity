@@ -1,7 +1,6 @@
 ﻿/* Unity_Forumより
  * http://forum.unity3d.com/threads/image-fonts-fontawesome.281746/#post-1862245
  */
-
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;

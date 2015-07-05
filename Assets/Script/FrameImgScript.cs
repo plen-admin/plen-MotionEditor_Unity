@@ -16,7 +16,7 @@ public class FrameImgScript : MonoBehaviour {
 	private Collider2D thisCollider;
 	private Button[] btnArray;
 	private int _index;
-	private const string FRAMEIMG_SAVE_PATH = "./tmp/frameImg/";
+	private string framingSavePath;
 
 
 	private bool isActive;
@@ -48,8 +48,10 @@ public class FrameImgScript : MonoBehaviour {
 		btnArray = this.GetComponentsInChildren<Button> ();
 		objectsController = GameObject.Find ("ObjectsController").GetComponent<ObjectsController> ();
 		parentPanelFrames = GameObject.Find ("PanelFrames").GetComponent<PanelFramesScript> ();
-		if (!Directory.Exists (FRAMEIMG_SAVE_PATH)) {
-			Directory.CreateDirectory (FRAMEIMG_SAVE_PATH);
+
+		framingSavePath = objectsController.tmpFilePath + "/frames/";
+		if (!Directory.Exists (framingSavePath)) {
+			Directory.CreateDirectory (framingSavePath);
 		}
 	}
 	
@@ -177,17 +179,17 @@ public class FrameImgScript : MonoBehaviour {
 		Texture2D saveTex = new Texture2D(frameImgTex.width, frameImgTex.height);
 		saveTex.ReadPixels (new Rect (0, 0, frameImgTex.width, frameImgTex.height), 0, 0);
 		var savePngBytes = saveTex.EncodeToPNG ();
-		System.IO.File.WriteAllBytes (FRAMEIMG_SAVE_PATH + index.ToString() + ".png", savePngBytes);
+		System.IO.File.WriteAllBytes (framingSavePath + index.ToString() + ".png", savePngBytes);
 		Destroy (saveTex);
 		RenderTexture.active = renderTexRT;
 	}
 
 
 	private Texture ReadFrameImgTexPng() {
-		if (!File.Exists (FRAMEIMG_SAVE_PATH + index.ToString () + ".png"))
+		if (!File.Exists (framingSavePath + index.ToString () + ".png"))
 			return null;
 
-		FileStream readStream = new FileStream (FRAMEIMG_SAVE_PATH + index.ToString () + ".png", FileMode.Open, FileAccess.Read);
+		FileStream readStream = new FileStream (framingSavePath + index.ToString () + ".png", FileMode.Open, FileAccess.Read);
 		BinaryReader binaryReader = new BinaryReader (readStream);
 		var binaryPng = binaryReader.ReadBytes ((int)binaryReader.BaseStream.Length);
 		Texture2D readPngTex = new Texture2D (frameImgTex.width, frameImgTex.height);
@@ -197,9 +199,9 @@ public class FrameImgScript : MonoBehaviour {
 	}
 
 	private void FrameImgTexPngReplace(int srcIndex, int detIndex) {
-		string srcPath = FRAMEIMG_SAVE_PATH + srcIndex.ToString () + ".png";
-		string dstPath = FRAMEIMG_SAVE_PATH + detIndex.ToString () + ".png";
-		string tmpPath = FRAMEIMG_SAVE_PATH + "tmp";
+		string srcPath = framingSavePath + srcIndex.ToString () + ".png";
+		string dstPath = framingSavePath + detIndex.ToString () + ".png";
+		string tmpPath = framingSavePath + "tmp";
 
 		if (!File.Exists (srcPath) || !File.Exists (dstPath))
 			return;

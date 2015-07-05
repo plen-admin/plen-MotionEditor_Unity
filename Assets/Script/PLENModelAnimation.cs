@@ -33,7 +33,13 @@ public class PLENModelAnimation : MonoBehaviour {
 	/// 再生中のクリップ番号
 	/// </summary>
 	private int playingClip;
-
+	/// <summary>
+	///  再生中フレームインデックス
+	/// </summary>
+	private int playingFrameIndex;
+	/// <summary>
+	/// 再生終了インデックス
+	/// </summary>
 	private int _endIndex;
 
 	// Use this for initialization
@@ -49,6 +55,7 @@ public class PLENModelAnimation : MonoBehaviour {
 				// まだ再生すべきクリップが残っているなら再生
 				if (playingClip < animationClipList.Count - 1) {
 					playingClip++;
+					playingFrameIndex++;
 					objectsController.panelFrames.AnimationClipChanged (playingClip);
 					thisAnimation.Play (animationClipList [playingClip].name);
 				} else {
@@ -68,7 +75,7 @@ public class PLENModelAnimation : MonoBehaviour {
 		if (isPlaying == true) {
 			thisAnimation.Stop ();
 			isPlaying = false;
-			objectsController.panelFrames.PlayAnimationEnded (playingClip);
+			objectsController.panelFrames.PlayAnimationEnded (playingFrameIndex);
 			objectsController.isAnimationPlaying = false;
 		}
 	}
@@ -99,6 +106,7 @@ public class PLENModelAnimation : MonoBehaviour {
 		// 変数初期化
 		_endIndex = endIndex;
 		playingClip = 0;
+		playingFrameIndex = startIndex;
 		isPlaying = true;
 		// アニメーション再生通知
 		objectsController.panelFrames.AnimationStarted (startIndex);
