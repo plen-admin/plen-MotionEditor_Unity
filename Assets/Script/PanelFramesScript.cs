@@ -317,6 +317,7 @@ public class PanelFramesScript : MonoBehaviour {
 		CallSelectedFrameImgChanged (false);
 		objects.motionData.ChangeSelectFrame (selectedIndex);
 	}
+
 	/// <summary>
 	///  選択フレーム変更通知メソッド
 	/// </summary>

@@ -132,6 +132,24 @@ public class MotionData : MonoBehaviour {
 		if (index > frameList.Count - 1)
 			index = frameList.Count - 1;
 	}
+
+	public void ModelTurnOver() {
+		Debug.Log (index + " :  : : ");
+		float[] anglesTmp = new float[modelJointList.Count];
+		for (int i = 0; i < frameList [index].jointAngles.Length; i++) {
+			anglesTmp[i] = frameList [index].jointAngles [i].Angle;
+		}
+
+		int offset = modelJointList.Count / 2;
+		for (int i = 0; i < modelJointList.Count / 2; i++) {
+			frameList [index].JointRotate (i, - frameList [index].jointAngles [i].Angle * Frame.DATA_ROTATE_DIRECTION[i], false);
+			frameList [index].JointRotate (i, frameList [index].jointAngles [i + offset].Angle * Frame.DATA_ROTATE_DIRECTION[i+offset], false);
+		}
+		for (int i = offset; i < modelJointList.Count; i++) {
+			frameList [index].JointRotate (i, - frameList [index].jointAngles [i].Angle * Frame.DATA_ROTATE_DIRECTION[i], false);
+			frameList [index].JointRotate (i,anglesTmp[i-offset] * Frame.DATA_ROTATE_DIRECTION[i-offset], false);
+		}
+	}
 	/// <summary>
 	/// モーションファイル（JSON）データ作成メソッド
 	/// </summary>
@@ -191,7 +209,8 @@ public class MotionData : MonoBehaviour {
 			// スロット番号更新
 			objects.menuController.InputFieldSlotUpdate(jsonMain.slot);
 			return true;
-		}catch(Exception) {
+		}catch(Exception ex) {
+			Debug.LogError (ex.Message);
 			return false;
 		}
 	}
@@ -219,8 +238,8 @@ public class Frame {
 	/// </summary>
 	private List<GameObject> modelJointList;
 
-	private readonly int[] DATA_ROTATE_DIRECTION = { 1, 1, -1, 1, -1, 1, 1, -1 ,1, -1, -1, 1, -1, 1, -1, -1, 1, -1 }; 
-	private readonly int[] DISP_ROTATE_DIRECTION =  { -1, -1, -1, 1, -1, -1, -1, 1, 1, 1, 1, 1, -1, 1, 1, 1, -1, -1 };
+	public static readonly int[] DATA_ROTATE_DIRECTION = { 1, 1, -1, 1, -1, 1, 1, -1 ,1, -1, -1, 1, -1, 1, -1, -1, 1, -1 }; 
+	public static readonly int[] DISP_ROTATE_DIRECTION =  { -1, -1, -1, 1, -1, -1, -1, 1, 1, 1, 1, 1, -1, 1, 1, 1, -1, -1 };
 	/// <summary>
 	/// コンストラクタ
 	/// </summary>
@@ -261,16 +280,19 @@ public class Frame {
 		modelJointList = baseFrame.modelJointList;
 		transitionTime = baseFrame.transitionTime;
 	}
+
+	public void JointRotate(PLEN.JointName jointName, float angle, bool isMotionDataRead = false) {
+		JointRotate ((int)jointName, angle, isMotionDataRead);
+	}
 	/// <summary>
 	///  関節回転メソッド（angle値も更新）
 	/// </summary>
 	/// <param name="jointName">回転関節名</param>
 	/// <param name="angle">回転角度</param>
 	/// <param name="isAdjust"><c>true</c> : 左右でangle値を反転する</param>
-	public void JointRotate(PLEN.JointName jointName, float angle, bool isMotionDataRead = false) {
+	public void JointRotate(int jointIndex, float angle, bool isMotionDataRead = false) {
 		float dispAngle = angle;
-		int jointIndex = (int)jointName;
-
+		Debug.Log (jointIndex+ " : " + angle);
 		if (angle != 0.0f) {
 			
 			// パーツによって回転方向が異なるため，angle値を調整
@@ -302,7 +324,7 @@ public class Frame {
 			if (isMotionDataRead == false) {
 				jointAngles [jointIndex].Angle += angle * DATA_ROTATE_DIRECTION [jointIndex];
 			} else {
-				jointAngles [jointIndex].Angle += angle;
+				jointAngles [jointIndex].Angle = angle;
 			}
 		}
 	}
@@ -381,6 +403,7 @@ public class JointAngle {
 		jointIndex = baseJointAngle.jointIndex;
 		coord = baseJointAngle.coord;
 		eulerAngle = baseJointAngle.eulerAngle;
+		Angle = baseJointAngle.Angle;
 	}
 }
 

@@ -49,7 +49,7 @@ public class FrameImgScript : MonoBehaviour {
 		objectsController = GameObject.Find ("ObjectsController").GetComponent<ObjectsController> ();
 		parentPanelFrames = GameObject.Find ("PanelFrames").GetComponent<PanelFramesScript> ();
 
-		framingSavePath = objectsController.tmpFilePath + "/frames/";
+		framingSavePath = ObjectsController.tmpFilePath + "Frames/";
 		if (!Directory.Exists (framingSavePath)) {
 			Directory.CreateDirectory (framingSavePath);
 		}

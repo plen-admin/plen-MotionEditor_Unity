@@ -82,10 +82,15 @@ public class ObjectsController : MonoBehaviour {
 	/// <summary>
 	///  一時ファイル保存先（読み取り専用）
 	/// </summary>
-	public  string tmpFilePath {
+	public  static string tmpFilePath {
 		get { return _tmpFilePath; }
 	}
-	private string _tmpFilePath;
+
+	public static string externalFilePath {
+		get { return _externalFilePath; }
+	}
+	private static string _tmpFilePath;
+	private static string _externalFilePath;
 	private bool _isAnimationPlaying;
 	private bool _isFrameRelationWaitRequest;
 	private bool _isAllObjectWaitRequest;
@@ -95,6 +100,15 @@ public class ObjectsController : MonoBehaviour {
 	void Start () {
 		motionInstall = this.GetComponent<MotionInstall> ();
 		_tmpFilePath = Application.dataPath + "/tmp/";
+
+		if (Application.platform == RuntimePlatform.WindowsPlayer) {
+			_externalFilePath = Application.dataPath + "/../Plugins/Windows/";
+		} else if (Application.platform == RuntimePlatform.OSXPlayer) {
+			_externalFilePath = Application.dataPath + "/../../Plugins/OSX/";
+		} else {
+			_externalFilePath = Application.dataPath + "/Plugins/";
+		}
+
 	}
 	
 	// Update is called once per frame

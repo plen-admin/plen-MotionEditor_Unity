@@ -152,43 +152,36 @@ public class MenuGUI : MonoBehaviour {	/// <summary>
 		}
 	}
 
-	public void BtnOpen_Click()
-	{
+	public void BtnOpen_Click() {
 		// 画面無効化，フラグセットを行いOpenFileDialogを表示
 		objects.isAllObjectWaitRequest = true;
 		uiDisabledMaskImg.enabled = true;
 		fileChooser.OpenFileDialog_Show ();
 	}
-	public void BtnSave_Click()
-	{
+	public void BtnSave_Click() {
 		// 画面無効化，フラグセットを行いSaveFileDialogを表示
 		objects.isAllObjectWaitRequest = true;
 		uiDisabledMaskImg.enabled = true;
 		fileChooser.SaveFileDialog_Show ();
 	}
-	public void BtnNew_Click()
-	{
+	public void BtnNew_Click() {
 		objects.dialog.Show ("本当に新規モーションを作成しますか？", 
 			"現在の作業内容が破棄されます．" + System.Environment.NewLine + "保存がまだの場合は”キャンセル”をクリックしてください");
 		uiDisabledMaskImg.enabled = true;
 	}
-	public void BtnDefaultPos_Click(GameObject motionDataObject)
-	{
+	public void BtnDefaultPos_Click(GameObject motionDataObject) {
 		// フレーム初期化
 		objects.panelFrames.FrameInitialize ();
 	}
-	public void BtnPlay_Click()
-	{
+	public void BtnPlay_Click() {
 		// アニメーション再生
 		objects.plenAnimation.AnimationPlay ();
 	}
-	public void BtnStop_Click()
-	{
+	public void BtnStop_Click() {
 		// アニメーション停止
 		objects.plenAnimation.AnimationStop ();
 	}
-	public void BtnBackFrame_Click()
-	{
+	public void BtnBackFrame_Click() {
 		// ひとつ前のフレームを選択
 		objects.panelFrames.FrameGoBack ();
 	}
@@ -197,11 +190,10 @@ public class MenuGUI : MonoBehaviour {	/// <summary>
 		// ひとつ次のフレームを選択
 		objects.panelFrames.FrameGoNext ();
 	}
-	public void BtnInstall_Click()
-	{
+	public void BtnInstall_Click() {
 		// モーションインストールを行う
 		string fileName = "fromMotionEditor";
-		string jsonPath = objects.tmpFilePath + "/" + fileName + ".json";
+		string jsonPath = ObjectsController.tmpFilePath + "/" + fileName + ".json";
 		// JSONファイル作成．保存．
 		string jsonStr = objects.motionData.MotionJSONDataCreate (fileName);
 		using (FileStream stream = File.Create (jsonPath)) {
@@ -212,8 +204,10 @@ public class MenuGUI : MonoBehaviour {	/// <summary>
 		// 保存したJSONファイルをもとにモーションインストーラを起動．
 		objects.motionInstall.StartMotionInstallApp (@jsonPath,  @fileName);
 	}
-	public void BtnSync_Click()
-	{
+	public void BtnSync_Click() {
+	}
+	public void BtnMirror_Click() {
+		objects.motionData.ModelTurnOver ();
 	}
 	/// <summary>
 	///  スロット番号更新メソッド（イベント呼び出し．InputFieldSlotの値が変更された．）
