@@ -23,7 +23,7 @@ public class MotionInstall : MonoBehaviour {
 		System.Diagnostics.ProcessStartInfo info = new System.Diagnostics.ProcessStartInfo ();
 		//info.FileName = "c:/Git/plen2__ble_motion_installer_gui/bin/Debug/MotionInstaller.exe";
 		info.FileName = ObjectsController.externalFilePath + "MotionInstaller.exe";
-		info.Arguments = jsonPath + " " + fileName;
+		info.Arguments = WWW.EscapeURL(jsonPath) + " " + WWW.EscapeURL(fileName);
 
 		Debug.Log (info.FileName);
 		// モーションインストーラ起動

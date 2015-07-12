@@ -131,22 +131,27 @@ public class MotionData : MonoBehaviour {
 		frameList.RemoveAt (removeIndex);
 		if (index > frameList.Count - 1)
 			index = frameList.Count - 1;
-	}
 
+	}
+	/// <summary>
+	///  モデルミラーメソッド（左右反転）
+	/// </summary>
 	public void ModelTurnOver() {
-		Debug.Log (index + " :  : : ");
+		// 現在の角度情報をすべて保存
 		float[] anglesTmp = new float[modelJointList.Count];
 		for (int i = 0; i < frameList [index].jointAngles.Length; i++) {
 			anglesTmp[i] = frameList [index].jointAngles [i].Angle;
 		}
-
+		// 一度フレームを初期状態にし，左右の角度情報を入れ替える
+		// Note...DATA_ROTATE_DIRECTIONで符号を調整しているため，必ずかける必要あり
+		FrameInitialize (index, false);
 		int offset = modelJointList.Count / 2;
-		for (int i = 0; i < modelJointList.Count / 2; i++) {
-			frameList [index].JointRotate (i, - frameList [index].jointAngles [i].Angle * Frame.DATA_ROTATE_DIRECTION[i], false);
-			frameList [index].JointRotate (i, frameList [index].jointAngles [i + offset].Angle * Frame.DATA_ROTATE_DIRECTION[i+offset], false);
+		// 左半身
+		for (int i = 0; i < offset; i++) {
+			frameList [index].JointRotate (i, anglesTmp[i+offset] * Frame.DATA_ROTATE_DIRECTION[i+offset], false);
 		}
+		// 右半身
 		for (int i = offset; i < modelJointList.Count; i++) {
-			frameList [index].JointRotate (i, - frameList [index].jointAngles [i].Angle * Frame.DATA_ROTATE_DIRECTION[i], false);
 			frameList [index].JointRotate (i,anglesTmp[i-offset] * Frame.DATA_ROTATE_DIRECTION[i-offset], false);
 		}
 	}
@@ -292,7 +297,6 @@ public class Frame {
 	/// <param name="isAdjust"><c>true</c> : 左右でangle値を反転する</param>
 	public void JointRotate(int jointIndex, float angle, bool isMotionDataRead = false) {
 		float dispAngle = angle;
-		Debug.Log (jointIndex+ " : " + angle);
 		if (angle != 0.0f) {
 			
 			// パーツによって回転方向が異なるため，angle値を調整

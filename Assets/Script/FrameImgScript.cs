@@ -110,6 +110,12 @@ public class FrameImgScript : MonoBehaviour {
 			if (panelFrames.FrameCount > 1) {
 				panelFrames.isFramePlayingDestroyAnimation = true;
 				this.GetComponent<Animator> ().SetBool ("isDestroy", true);
+			} 
+			// 1フレームのみの場合，そのフレームを初期化する 
+			else {
+				objectsController.motionData.FrameInitialize (0);
+				parentPanelFrames.ChildFrameImgClick (0);
+
 			}
 		}
 	}

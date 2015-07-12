@@ -99,7 +99,7 @@ public class ObjectsController : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 		motionInstall = this.GetComponent<MotionInstall> ();
-		_tmpFilePath = Application.dataPath + "/tmp/";
+		_tmpFilePath = Application.dataPath + "/../tmp/";
 
 		if (Application.platform == RuntimePlatform.WindowsPlayer) {
 			_externalFilePath = Application.dataPath + "/../Plugins/Windows/";

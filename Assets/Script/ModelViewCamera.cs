@@ -21,6 +21,10 @@ public class ModelViewCamera : MonoBehaviour {
 	/// </summary>
 	public Transform lookAtModel;
 	/// <summary>
+	///  角度インジケータオブジェクト（インスペクタで初期化）
+	/// </summary>
+	public GameObject angleIndicator;
+	/// <summary>
 	/// マウスボタン押下フラグ(左，右，中）
 	/// </summary>
 	private bool[] isMouseDown = {false, false, false};
@@ -45,9 +49,13 @@ public class ModelViewCamera : MonoBehaviour {
 	/// </summary>
 	private float moveDistanceGain;
 	/// <summary>
-	/// 3Dモデル可動パーツがクリックされたか判定フラグ
+	/// クリックされた3Dモデル可動パーツ
 	/// </summary>
 	private Transform clickedModelPart = null;
+	/// <summary>
+	/// インジケータのラベル
+	/// </summary>
+	private Text labelAngleIndicator;
 	/// <summary>
 	/// 3D可動パーツリスト
 	/// </summary>
@@ -61,7 +69,9 @@ public class ModelViewCamera : MonoBehaviour {
 		                             , 1 - viewerPanel.rect.height / viewerCanvas.rect.height
 		                             , viewerPanel.rect.width / viewerCanvas.rect.width
 		                              , viewerPanel.rect.height / viewerCanvas.rect.height);
-		
+
+		labelAngleIndicator = angleIndicator.GetComponentInChildren<Text> ();
+		angleIndicator.SetActive (false);
 		// ViewerPanelのColliderを調整（画面解像度により大きさが変わるので）
 		BoxCollider2D collider = viewerPanel.GetComponent<BoxCollider2D> ();
 		Rect rect = viewerPanel.GetComponent<RectTransform> ().rect;
@@ -99,7 +109,11 @@ public class ModelViewCamera : MonoBehaviour {
 						// クリックしたオブジェクトが可動パーツか判定
 						foreach (GameObject adjustableModelPart in AdjustableModelParts) {
 							if (adjustableModelPart.GetComponent<Collider> () == hit.collider) {
+								
 								clickedModelPart = adjustableModelPart.transform;
+								// 角度インジケータの位置調整・表示
+								angleIndicator.SetActive (true);
+								angleIndicator.transform.position = Input.mousePosition;
 							}
 						}
 						posRotationCenter = hit.point;
@@ -125,6 +139,7 @@ public class ModelViewCamera : MonoBehaviour {
 			// 左ボタンリリース
 			else if (isMouseDown [0] == true && Input.GetMouseButtonUp (0)) {
 				isMouseDown [0] = false;
+				angleIndicator.SetActive (false);	// 角度インジケータ非表示
 			} 
 			// 右ボタン押下（オブジェクト水平移動）
 			// note : 物体との距離に応じて移動距離を変化させ，できるだけ画面上での物体移動量を同じにする
@@ -220,11 +235,15 @@ public class ModelViewCamera : MonoBehaviour {
 	///  関節オブジェクト回転メソッド
 	/// </summary>
 	private void JointRotation() {
+		int frameIndex = objects.motionData.index;
 		// 選択した関節名を取得
 		PLEN.JointName clickedJointName = clickedModelPart.GetComponent<JointParameter> ().Name;
+
 		// オブジェクト回転（回転量はマウスy座標の変位量）
-		objects.motionData.frameList [objects.motionData.index].JointRotate (clickedJointName, 
+		objects.motionData.frameList [frameIndex].JointRotate (clickedJointName, 
 			(Input.mousePosition.y - posBefore.y) * 2.0f);
+
+		labelAngleIndicator.text = objects.motionData.frameList [frameIndex].jointAngles [(int)clickedJointName].Angle.ToString ();
 		// 旧マウスポインタ座標更新
 		posBefore = Input.mousePosition;
 
