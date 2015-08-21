@@ -21,6 +21,10 @@ public class ModelViewCamera : MonoBehaviour {
 	/// </summary>
 	public Transform lookAtModel;
 	/// <summary>
+	/// 回転基準座標
+	/// </summary>
+	public Transform rotReferenceCoord;
+	/// <summary>
 	///  角度インジケータオブジェクト（インスペクタで初期化）
 	/// </summary>
 	public GameObject angleIndicator;
@@ -60,7 +64,9 @@ public class ModelViewCamera : MonoBehaviour {
 	/// 3D可動パーツリスト
 	/// </summary>
 	private  List<GameObject> AdjustableModelParts =  null;
-
+	private Vector3 defaultCameraPos;
+	private Vector3 defaultModelPos;
+	private Quaternion defaultCameraRot;
 
 	/***** 初回実行メソッド（オーバーライド） *****/
 	void Start () {
@@ -77,6 +83,10 @@ public class ModelViewCamera : MonoBehaviour {
 		Rect rect = viewerPanel.GetComponent<RectTransform> ().rect;
 		collider.size = rect.size;
 		collider.offset = new Vector2 (rect.width / 2, rect.height / 2);
+
+		defaultCameraPos = transform.position;
+		defaultCameraRot = transform.rotation;
+		defaultModelPos = lookAtModel.position;
 	}
 
 	/***** 1フレームごとに呼び出されるメソッド（オーバーライド） *****/
@@ -116,12 +126,9 @@ public class ModelViewCamera : MonoBehaviour {
 								angleIndicator.transform.position = Input.mousePosition;
 							}
 						}
-						posRotationCenter = hit.point;
 					} 
-					// クリックした位置に何もなかった場合，カメラの中央を回転中心とする
-					else
-						posRotationCenter = lookAtModel.position;
-//						posRotationCenter = this.transform.TransformDirection (this.transform.forward);
+					// カメラの回転中心はPLEN本体の中心
+					posRotationCenter = rotReferenceCoord.position;
 					// 旧マウスポインタ座標を更新（この更新がないとカメラが予期せぬ方向に回転する）
 					posBefore = Input.mousePosition;
 					isMouseDown [0] = true;
@@ -131,7 +138,7 @@ public class ModelViewCamera : MonoBehaviour {
 					CameraRotation ();
 				} else {
 					// 可動パーツをクリック（アニメーション再生時は操作不可に）
-					if (objects.plenAnimation.IsPlaying == false) {
+					if (objects.isAnimationPlaying == false) {
 						JointRotation ();
 					}
 				}
@@ -188,7 +195,18 @@ public class ModelViewCamera : MonoBehaviour {
 		}
 
 	}
-	/***** モデル平行移動メソッド *****/
+	/// <summary>
+	/// カメラ表示区域・位置初期化メソッド
+	/// </summary>
+	public void CameraViewInitalize() {
+		transform.position = defaultCameraPos;
+		transform.rotation = defaultCameraRot;
+		lookAtModel.position = defaultModelPos;
+	}
+
+	/// <summary>
+	/// モデル平行移動メソッド
+	/// </summary>
 	private void ModelMove () {
 		// モデルの移動（モデルとの距離を重みにし，できるだけ画面上での移動量を同じに見えるようにする）
 		lookAtModel.Translate ((this.transform.right * (Input.mousePosition.x - posBefore.x) * MOVE_GAIN * moveDistanceGain) 

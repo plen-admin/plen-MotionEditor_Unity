@@ -1,4 +1,4 @@
-PLEN - Motion Editor for Native(Unity).
+PLEN - Motion Editor for Unity.
 ================================================================================
 Copyright (c) 2015.
 ---

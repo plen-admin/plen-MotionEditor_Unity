@@ -77,6 +77,8 @@ public class PanelFramesScript : MonoBehaviour {
 	/// </summary>
 	private BoxCollider2D layoutAreaCollider;
 
+	private Vector3 clickPos;
+
 	// Use this for initialization
 	void Start () {
 		// インスタンス類初期化
@@ -86,6 +88,7 @@ public class PanelFramesScript : MonoBehaviour {
 		// 初期フレーム作成
 		selectedIndex = 0;
 		CreateNewFrameImg (0);
+		clickPos = new Vector3 (0, 0, 0);
 
 		// ViewerPanelのColliderを調整（画面解像度により大きさが変わるので）
 		thisCollider = this.GetComponent<BoxCollider2D> ();
@@ -98,10 +101,25 @@ public class PanelFramesScript : MonoBehaviour {
 	void Update () {
 		// Frame関連の待機リクエストがあるか判定
 		if(objects.isFrameRelationWaitRequest == false) {
+
+			if (clickPos == new Vector3(0,0,0) && Input.GetMouseButton(0)) {
+				clickPos = Input.mousePosition;
+			}
 			// マウスクリックを検知し，フレーム削除中でないでないことを確認
-			if (Input.GetMouseButtonUp (0) && isFramePlayingDestroyAnimation == false) {
+			else if (Input.GetMouseButtonUp (0) && isFramePlayingDestroyAnimation == false) {
+				
 				// フレームがクリックされていなく，かつフレーム表示区域をクリック → 新規フレーム作成
 				if (isChildFrameImgClicked == false && thisCollider.OverlapPoint(Input.mousePosition)) {
+
+					if (!Vector3NearlyEqual(clickPos, Input.mousePosition, 10)) {
+						clickPos = new Vector3 (0, 0, 0);
+						return;
+					}
+
+					if (frameImgList.Count >= 20) {
+						return;
+					}
+
 					int createIndex = -1;	// 作成されるフレームのインデックス
 					// クリック位置のcollider一覧を取得
 					RaycastHit2D[] hits = Physics2D.RaycastAll (Input.mousePosition, -Vector2.up);
@@ -136,6 +154,7 @@ public class PanelFramesScript : MonoBehaviour {
 				else {
 					isChildFrameImgClicked = false;
 				}
+				clickPos = new Vector3 (0, 0, 0);
 			}
 		}
 
@@ -144,11 +163,24 @@ public class PanelFramesScript : MonoBehaviour {
 	void LateUpdate() {
 		// FrameImgLayAoutAreaのColliderサイズを調整
 		// Note...Content Size FilterによりlayoutAreaのWidthが可変的，かつサイズ変更のタイミングが不明なため，
-		// Colliderのサイズ調整が必要．
+		//        Colliderのサイズ調整が必要．
 		layoutAreaWidth = layoutAreaRectTransfrom.rect.width - framePadding;
 		layoutAreaCollider.size = new Vector2 (layoutAreaWidth, layoutAreaCollider.size.y);
 		layoutAreaCollider.offset = new Vector2 (layoutAreaWidth / 2, 0f);
 	}
+
+	bool Vector3NearlyEqual(Vector3 vec1, Vector3 vec2, float delta) {
+
+		if (Mathf.Abs (vec1.x - vec2.x) > delta)
+			return false;
+		if (Mathf.Abs (vec1.y - vec2.y) > delta)
+			return false;
+		if (Mathf.Abs (vec1.z - vec2.z) > delta)
+			return false;
+		
+		return true;
+	}
+
 	/// <summary>
 	/// 全フレームリセット（モーション新規作成）メソッド
 	/// </summary>

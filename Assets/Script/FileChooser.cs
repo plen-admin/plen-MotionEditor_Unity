@@ -29,7 +29,7 @@ public class FileChooser : MonoBehaviour
 	/// <summary>
 	/// ファイル選択ダイアログ表示・選択ファイルパス保存スクリプト(applescript記述)
 	/// Note...Processが日本語の戻り値を受け取ると必ず文字化けする．
-	///        そのため選択ファイルのパスをファイルに書き出す方法で実装を行った．
+	///        従ってchoose fileで取得したファイルパスをURLエンコード（ php -r "echo urlencode("XXX") ）した状態で受け取る．
 	/// </summary>
 	public const string SCRIPT_CHOOSE_FILE = 
 		"-e 'do shell script \"php -r \\\"echo urlencode(\\\\\\\"\" & ((POSIX path of (choose file)) as text) &  \"\\\\\\\");\\\"\"'";
@@ -192,12 +192,11 @@ public class FileChooser : MonoBehaviour
 	}
 
 	public void OpenFileDialog_Show() {
-		OpenFileDialogFinished("", "未実装の機能です”);
+		OpenFileDialogFinished ("", "未実装の機能です");
 	}
 
 	public void SaveFileDialog_Show() {
-
-		OpenFileDialogFinished("", "未実装の機能です”);
+		OpenFileDialogFinished ("", "未実装の機能です");
 	}
 
 	#endif

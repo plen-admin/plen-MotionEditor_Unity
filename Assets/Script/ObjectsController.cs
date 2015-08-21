@@ -11,6 +11,10 @@ public class ObjectsController : MonoBehaviour {
 	/// </summary>
 	public MenuGUI menuController;
 	/// <summary>
+	/// モデル表示コントローラ
+	/// </summary>
+	public ModelViewCamera modelViewController;
+	/// <summary>
 	/// ダイアログ
 	/// </summary>
 	public DialogScript dialog;
@@ -89,25 +93,38 @@ public class ObjectsController : MonoBehaviour {
 	public static string externalFilePath {
 		get { return _externalFilePath; }
 	}
+	public static string sampleMotionDirPath {
+		get { return _sampleMotionDirPath; }
+	}
 	private static string _tmpFilePath;
 	private static string _externalFilePath;
+	private static string _sampleMotionDirPath;
 	private bool _isAnimationPlaying;
 	private bool _isFrameRelationWaitRequest;
 	private bool _isAllObjectWaitRequest;
 	private bool _isDialogShowing;
 
+	void Awake() {
+		if (Application.platform == RuntimePlatform.WindowsPlayer) {
+			_tmpFilePath = Application.dataPath + "/../tmp/";
+			_externalFilePath = Application.dataPath + "/../Plugins/Windows/";
+			_sampleMotionDirPath = Application.dataPath + "/../Plugins/SampleMotion/";
+		} else if (Application.platform == RuntimePlatform.OSXPlayer) {
+			_tmpFilePath = Application.dataPath + "/../../tmp/";
+			_externalFilePath = Application.dataPath + "/../../Plugins/OSX/";
+			_sampleMotionDirPath = Application.dataPath + "/../../Plugins/SampleMotion/";
+		} else {
+			_tmpFilePath = Application.dataPath + "/tmp/";
+			_externalFilePath = Application.dataPath + "/Plugins/";
+			_sampleMotionDirPath = Application.dataPath + "/Plugins/SampleMotion/";
+		}
+	}
+
 	// Use this for initialization
 	void Start () {
 		motionInstall = this.GetComponent<MotionInstall> ();
-		_tmpFilePath = Application.dataPath + "/../tmp/";
 
-		if (Application.platform == RuntimePlatform.WindowsPlayer) {
-			_externalFilePath = Application.dataPath + "/../Plugins/Windows/";
-		} else if (Application.platform == RuntimePlatform.OSXPlayer) {
-			_externalFilePath = Application.dataPath + "/../../Plugins/OSX/";
-		} else {
-			_externalFilePath = Application.dataPath + "/Plugins/";
-		}
+
 
 	}
 	

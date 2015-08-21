@@ -209,6 +209,40 @@ public class MenuGUI : MonoBehaviour {	/// <summary>
 	public void BtnMirror_Click() {
 		objects.motionData.ModelTurnOver ();
 	}
+	public void BtnMirrorRtoL_Click() {
+		objects.motionData.ModelMirror (true);
+	}
+	public void BtnMirrorLtoR_Click() {
+		objects.motionData.ModelMirror (false);
+	}
+	public void BtnCameraReset_Click() {
+		objects.modelViewController.CameraViewInitalize ();
+	}
+	public void BtnSample1_Click() {
+		SampleMotionRead (1);
+	}
+	public void BtnSample2_Click() {
+		SampleMotionRead (2);
+	}
+	public void BtnSample3_Click() {
+		SampleMotionRead (3);
+	}
+	/// <summary>
+	/// サンプルモーション読み込みメソッド
+	/// </summary>
+	/// <param name="index">Index</param>
+	private void SampleMotionRead(int index) {
+		string path = ObjectsController.sampleMotionDirPath + "Sample" + index.ToString () + ".json";
+		// パスがセットされていない→メソッド終了
+		if (string.IsNullOrEmpty (path))
+			return;
+		// JSONファイルを読出し，モーションデータに変換・表示．
+		string readStr;
+		using (StreamReader reader = new StreamReader (path)) {
+			readStr = reader.ReadToEnd ();
+		}
+		objects.panelFrames.MotionFramesRead (readStr);
+	}
 	/// <summary>
 	///  スロット番号更新メソッド（イベント呼び出し．InputFieldSlotの値が変更された．）
 	/// </summary>

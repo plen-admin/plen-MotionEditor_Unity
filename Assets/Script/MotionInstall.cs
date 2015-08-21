@@ -29,6 +29,24 @@ public class MotionInstall : MonoBehaviour {
 		// モーションインストーラ起動
 		System.Diagnostics.Process.Start (info);
 	}
+	#elif UNITY_STANDALONE_OSX
+	void Start() {
+	}
+	void Update() {
+	}
+
+	public void StartMotionInstallApp(string jsonPath, string fileName) {
+		// プロセス起動の各種設定．（MotionInstallerの仕様上第一引数：JSONファイルパス，第二引数：ファイル名である）
+		System.Diagnostics.Process process = new System.Diagnostics.Process();
+
+		process.StartInfo = new System.Diagnostics.ProcessStartInfo () {
+			FileName = ObjectsController.externalFilePath + "MotionInstaller.app/Contents/MacOS/MotionInstaller",
+			Arguments = WWW.EscapeURL (jsonPath) + " " + WWW.EscapeURL (fileName)
+		};
+
+		// モーションインストーラ起動
+		process.Start ();
+	}
 	#else
 	void Start() {
 	}
@@ -37,7 +55,6 @@ public class MotionInstall : MonoBehaviour {
 
 	public void StartMotionInstallApp(string jsonPath, string fileName) {
 	}
-
 	#endif
 
 

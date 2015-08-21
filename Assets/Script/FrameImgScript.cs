@@ -31,11 +31,13 @@ public class FrameImgScript : MonoBehaviour {
 		set {
 			_index = value;
 			labelFrame.text = _index.ToString ();
-			if (_index == 0) {
-				inputFieldTime.enabled = false;
-			} else {
-				inputFieldTime.enabled = true;
-			}
+		}
+	}
+
+	void Awake() {
+		framingSavePath = ObjectsController.tmpFilePath + "Frames/";
+		if (!Directory.Exists (framingSavePath)) {
+			Directory.CreateDirectory (framingSavePath);
 		}
 	}
 
@@ -49,10 +51,7 @@ public class FrameImgScript : MonoBehaviour {
 		objectsController = GameObject.Find ("ObjectsController").GetComponent<ObjectsController> ();
 		parentPanelFrames = GameObject.Find ("PanelFrames").GetComponent<PanelFramesScript> ();
 
-		framingSavePath = ObjectsController.tmpFilePath + "Frames/";
-		if (!Directory.Exists (framingSavePath)) {
-			Directory.CreateDirectory (framingSavePath);
-		}
+
 	}
 	
 	// Update is called once per frame
