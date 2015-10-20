@@ -1,11 +1,12 @@
-PLEN - Motion Editor for Unity.
+PLEN - Motion Editor for Unity
 ================================================================================
-Copyright (c) 2015.
+
+Copyright (c) 2015,
 ---
 - [Yugo KAJIWARA](https://github.com/musubi05)
 - [PLEN Project Company Ltd.](http://plen.jp)
 
-Build enviroment.
+Build Enviroment
 ---
 - Windows 8.1 Pro
 - OS X Yosemite (10.10.4)
@@ -14,6 +15,6 @@ Build enviroment.
 - Mono Soft Debugger Support for Unity 5.9.0
 - Utilities for use with Unity 5.9.0
 
-License.
+License
 ---
 This software is released under the MIT License.
