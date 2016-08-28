@@ -95,7 +95,7 @@ public class ModelViewCamera : MonoBehaviour {
 		// マウスポインタが指定のパネル内にあり，かつmenu（ダイアログ表示
 		// note...ダイアログ表示時は誤作動防止のため操作を無効にする
 		if (viewerPanel.GetComponent<Collider2D> ().OverlapPoint (Input.mousePosition)
-			&& objects.isAllObjectWaitRequest == false) {
+			&& objects.IsAllObjectWaitRequest == false) {
 
 			// ホイールの回転量に合わせてカメラをズームイン（or ズームアウト）させる
 			transform.Translate (new Vector3 (0.0f, 0.0f, Input.GetAxis ("Mouse ScrollWheel")));
@@ -105,7 +105,7 @@ public class ModelViewCamera : MonoBehaviour {
 			if (Input.GetMouseButton (0)) {
 				// モデル可動パーツリストを作成
 				if (AdjustableModelParts == null) {
-					AdjustableModelParts = new List<GameObject> (objects.motionData.modelJointList);
+					AdjustableModelParts = new List<GameObject> (objects.MotionData.ModelJointList);
 				}
 				// 押下した瞬間
 				if (isMouseDown [0] == false) {
@@ -138,7 +138,7 @@ public class ModelViewCamera : MonoBehaviour {
 					CameraRotation ();
 				} else {
 					// 可動パーツをクリック（アニメーション再生時は操作不可に）
-					if (objects.isAnimationPlaying == false) {
+					if (objects.IsAnimationPlaying == false) {
 						JointRotation ();
 					}
 				}
@@ -253,15 +253,15 @@ public class ModelViewCamera : MonoBehaviour {
 	///  関節オブジェクト回転メソッド
 	/// </summary>
 	private void JointRotation() {
-		int frameIndex = objects.motionData.index;
+		int frameIndex = objects.MotionData.Index;
 		// 選択した関節名を取得
 		PLEN.JointName clickedJointName = clickedModelPart.GetComponent<JointParameter> ().Name;
 
 		// オブジェクト回転（回転量はマウスy座標の変位量）
-		objects.motionData.frameList [frameIndex].JointRotate (clickedJointName, 
+		objects.MotionData.FrameList [frameIndex].JointRotate (clickedJointName, 
 			(Input.mousePosition.y - posBefore.y) * 2.0f);
 
-		labelAngleIndicator.text = objects.motionData.frameList [frameIndex].jointAngles [(int)clickedJointName].Angle.ToString ();
+		labelAngleIndicator.text = objects.MotionData.FrameList [frameIndex].jointAngles [(int)clickedJointName].Angle.ToString ();
 		// 旧マウスポインタ座標更新
 		posBefore = Input.mousePosition;
 

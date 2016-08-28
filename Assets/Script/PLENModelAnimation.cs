@@ -56,13 +56,13 @@ public class PLENModelAnimation : MonoBehaviour {
 				if (playingClip < animationClipList.Count - 1) {
 					playingClip++;
 					playingFrameIndex++;
-					objectsController.panelFrames.AnimationClipChanged (playingClip);
+					objectsController.PanelFrames.AnimationClipChanged (playingClip);
 					thisAnimation.Play (animationClipList [playingClip].name);
 				} else {
 					// 全アニメーションクリップが再生終了したので通知
 					isPlaying = false;
-					objectsController.panelFrames.PlayAnimationEnded (_endIndex);
-					objectsController.isAnimationPlaying = false;
+					objectsController.PanelFrames.PlayAnimationEnded (_endIndex);
+					objectsController.IsAnimationPlaying = false;
 				}
 			}
 		}
@@ -75,27 +75,27 @@ public class PLENModelAnimation : MonoBehaviour {
 		if (isPlaying == true) {
 			thisAnimation.Stop ();
 			isPlaying = false;
-			objectsController.panelFrames.PlayAnimationEnded (playingFrameIndex);
-			objectsController.isAnimationPlaying = false;
+			objectsController.PanelFrames.PlayAnimationEnded (playingFrameIndex);
+			objectsController.IsAnimationPlaying = false;
 		}
 	}
 
 	public void AnimationPlay() {
-		AnimationPlay (0, objectsController.panelFrames.frameImgList.Count - 1);
+		AnimationPlay (0, objectsController.PanelFrames.frameImgList.Count - 1);
 	}
 	/// <summary>
 	/// アニメーション再生メソッド
 	/// </summary>
 	public void AnimationPlay(int startIndex, int endIndex) {
 		// フレームが1つしかない → そもそもアニメーションが作れない
-		if (objectsController.motionData.frameList.Count <= 1 || startIndex == endIndex)
+		if (objectsController.MotionData.FrameList.Count <= 1 || startIndex == endIndex)
 			return;
 		// 各関節パーツの相対パスを生成
 		// Note...Start()ではまだmodelJointListが生成されていない場合がある
 		if (relativePathes.Length == 0) {
-			relativePathes = new string[objectsController.motionData.modelJointList.Count];
+			relativePathes = new string[objectsController.MotionData.ModelJointList.Count];
 			for (int i = 0; i < relativePathes.Length; i++) {
-				relativePathes [i] = GetObjectPath (objectsController.motionData.modelJointList [i]);
+				relativePathes [i] = GetObjectPath (objectsController.MotionData.ModelJointList [i]);
 			}
 		}
 
@@ -109,8 +109,8 @@ public class PLENModelAnimation : MonoBehaviour {
 		playingFrameIndex = startIndex;
 		isPlaying = true;
 		// アニメーション再生通知
-		objectsController.panelFrames.AnimationStarted (startIndex);
-		objectsController.isAnimationPlaying = true;
+		objectsController.PanelFrames.AnimationStarted (startIndex);
+		objectsController.IsAnimationPlaying = true;
 		// アニメーション再生
 		thisAnimation.Play (animationClipList [0].name);
 	}
@@ -140,11 +140,11 @@ public class PLENModelAnimation : MonoBehaviour {
 			animationClipList [clipIndex].legacy = true;	// SetCurveを使用するにはlegacyをtrueにする必要あり
 			animationClipList [clipIndex].name = clipIndex.ToString ();
 			// 全関節に対してアニメーションを作成
-			for(int j = 0; j < objectsController.motionData.modelJointList.Count; j++) {
+			for(int j = 0; j < objectsController.MotionData.ModelJointList.Count; j++) {
 				// 変数初期化 (今のフレームと一つ先のフレームの回転量と遷移時間）
-				var angleOld = Quaternion.Euler (objectsController.motionData.frameList [srcIndex].jointAngles [j].eulerAngle);
-				var angleNew = Quaternion.Euler (objectsController.motionData.frameList [nxtIndex].jointAngles [j].eulerAngle);
-				var time = (float)objectsController.motionData.frameList [nxtIndex].transitionTime / 1000;
+				var angleOld = Quaternion.Euler (objectsController.MotionData.FrameList [srcIndex].jointAngles [j].eulerAngle);
+				var angleNew = Quaternion.Euler (objectsController.MotionData.FrameList [nxtIndex].jointAngles [j].eulerAngle);
+				var time = (float)objectsController.MotionData.FrameList [nxtIndex].transitionTime / 1000;
 				// Rotationプロパティのx,y,z,wに対して一つずつアニメーションを設定
 				AnimationCurve curveX = AnimationCurve.EaseInOut (0f, angleOld.x, time, angleNew.x);
 				AnimationCurve curveY = AnimationCurve.EaseInOut (0f, angleOld.y, time, angleNew.y);				

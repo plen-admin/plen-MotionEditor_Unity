@@ -60,7 +60,7 @@ public class MenuGUI : MonoBehaviour {	/// <summary>
 		// イベント登録
 		fileChooser.OpenFileDialogFinished += new OpenFileDialogFinishedEventHander (OpenFileDialogFinished);
 		fileChooser.SaveFileDialogFinished += new SaveFileDialogFinishedEventHander (SaveFileDialogFinished);
-		objects.dialog.DialogFinished += new DialogFinishedEventHandler (DialogFinished);
+		objects.Dialog.DialogFinished += new DialogFinishedEventHandler (DialogFinished);
 
 		// PanelMenuのColliderを調整（画面解像度により大きさが変わるので）
 		BoxCollider2D collider = panelMenu.GetComponent<BoxCollider2D> ();
@@ -70,7 +70,7 @@ public class MenuGUI : MonoBehaviour {	/// <summary>
 
 		//  画面無効用画像のサイズを調整（画面解像度により大きさが変わるので）
 		RectTransform maskingRectTransform = uiDisabledMaskImgObject.GetComponent<RectTransform> ();	
-		maskingRectTransform.sizeDelta = objects.dispCanvasRectTransform.rect.size;
+		maskingRectTransform.sizeDelta = objects.DispCanvasRectTransform.rect.size;
 		//  画面無効用画像インスタンス設定．非表示に．
 		uiDisabledMaskImg = uiDisabledMaskImgObject.GetComponent<Image> ();
 		uiDisabledMaskImg.enabled = false;
@@ -78,7 +78,7 @@ public class MenuGUI : MonoBehaviour {	/// <summary>
 
 	void Update () {
 		// アニメーション再生時は停止ボタン以外を無効化する
-		if (objects.isAnimationPlaying == true) {
+		if (objects.IsAnimationPlaying == true) {
 			if (isBtnsDisabled == false) {
 				foreach (Button btn in btnArray) {
 					if (btn.name != "BtnStop")
@@ -104,7 +104,7 @@ public class MenuGUI : MonoBehaviour {	/// <summary>
 		// OKボタンがクリックされた場合，全フレームをリセットする．
 		uiDisabledMaskImg.enabled = false;
 		if (isBtnOKClicked == true) {
-			objects.panelFrames.AllFramesReset ();
+			objects.PanelFrames.AllFramesReset ();
 		}
 	}
 	/// <summary>
@@ -115,7 +115,7 @@ public class MenuGUI : MonoBehaviour {	/// <summary>
 	private void OpenFileDialogFinished(string path, string errorMessage) {
 		// 画面有効化．フラグをリセット．
 		uiDisabledMaskImg.enabled = false;
-		objects.isAllObjectWaitRequest = false;
+		objects.IsAllObjectWaitRequest = false;
 		// パスがセットされていない→メソッド終了
 		if (string.IsNullOrEmpty (path))
 			return;
@@ -124,7 +124,7 @@ public class MenuGUI : MonoBehaviour {	/// <summary>
 		using (StreamReader reader = new StreamReader (path)) {
 			readStr = reader.ReadToEnd ();
 		}
-		objects.panelFrames.MotionFramesRead (readStr);
+		objects.PanelFrames.MotionFramesRead (readStr);
 	}
 	/// <summary>
 	///  SaveFileDialog終了通知メソッド（イベント呼び出し）
@@ -134,7 +134,7 @@ public class MenuGUI : MonoBehaviour {	/// <summary>
 	private void SaveFileDialogFinished(string path, string errorMessage) {
 		// 画面有効化．フラグをリセット．
 		uiDisabledMaskImg.enabled = false;
-		objects.isAllObjectWaitRequest = false;
+		objects.IsAllObjectWaitRequest = false;
 		// パスがセットされていない→メソッド終了
 		if (string.IsNullOrEmpty (path))
 			return;
@@ -144,7 +144,7 @@ public class MenuGUI : MonoBehaviour {	/// <summary>
 		}
 		// モーションデータからJSONファイルに変換し，そのファイルを保存する
 		string fileName = System.IO.Path.GetFileNameWithoutExtension (path);
-		string jsonStr = objects.motionData.MotionJSONDataCreate (fileName);
+		string jsonStr = objects.MotionData.MotionJSONDataCreate (fileName);
 		using (FileStream stream = File.Create (path)) {
 			using (StreamWriter writer = new StreamWriter (stream)) {
 				writer.Write (jsonStr);
@@ -154,69 +154,69 @@ public class MenuGUI : MonoBehaviour {	/// <summary>
 
 	public void BtnOpen_Click() {
 		// 画面無効化，フラグセットを行いOpenFileDialogを表示
-		objects.isAllObjectWaitRequest = true;
+		objects.IsAllObjectWaitRequest = true;
 		uiDisabledMaskImg.enabled = true;
 		fileChooser.OpenFileDialog_Show ();
 	}
 	public void BtnSave_Click() {
 		// 画面無効化，フラグセットを行いSaveFileDialogを表示
-		objects.isAllObjectWaitRequest = true;
+		objects.IsAllObjectWaitRequest = true;
 		uiDisabledMaskImg.enabled = true;
 		fileChooser.SaveFileDialog_Show ();
 	}
 	public void BtnNew_Click() {
-		objects.dialog.Show ("本当に新規モーションを作成しますか？", 
+		objects.Dialog.Show ("本当に新規モーションを作成しますか？", 
 			"現在の作業内容が破棄されます．" + System.Environment.NewLine + "保存がまだの場合は”キャンセル”をクリックしてください");
 		uiDisabledMaskImg.enabled = true;
 	}
 	public void BtnDefaultPos_Click(GameObject motionDataObject) {
 		// フレーム初期化
-		objects.panelFrames.FrameInitialize ();
+		objects.PanelFrames.FrameInitialize ();
 	}
 	public void BtnPlay_Click() {
 		// アニメーション再生
-		objects.plenAnimation.AnimationPlay ();
+		objects.PlenAnimation.AnimationPlay ();
 	}
 	public void BtnStop_Click() {
 		// アニメーション停止
-		objects.plenAnimation.AnimationStop ();
+		objects.PlenAnimation.AnimationStop ();
 	}
 	public void BtnBackFrame_Click() {
 		// ひとつ前のフレームを選択
-		objects.panelFrames.FrameGoBack ();
+		objects.PanelFrames.FrameGoBack ();
 	}
 	public void BtnForwardFrame_Click()
 	{
 		// ひとつ次のフレームを選択
-		objects.panelFrames.FrameGoNext ();
+		objects.PanelFrames.FrameGoNext ();
 	}
 	public void BtnInstall_Click() {
 		// モーションインストールを行う
 		string fileName = "fromMotionEditor";
-		string jsonPath = ObjectsController.tmpFilePath + "/" + fileName + ".json";
+		string jsonPath = ObjectsController.TmpFilePath + "/" + fileName + ".json";
 		// JSONファイル作成．保存．
-		string jsonStr = objects.motionData.MotionJSONDataCreate (fileName);
+		string jsonStr = objects.MotionData.MotionJSONDataCreate (fileName);
 		using (FileStream stream = File.Create (jsonPath)) {
 			using (StreamWriter writer = new StreamWriter (stream)) {
 				writer.Write (jsonStr);
 			}
 		}
 		// 保存したJSONファイルをもとにモーションインストーラを起動．
-		objects.motionInstall.StartMotionInstallApp (@jsonPath,  @fileName);
+		objects.MotionInstall.StartMotionInstallApp (@jsonPath,  @fileName);
 	}
 	public void BtnSync_Click() {
 	}
 	public void BtnMirror_Click() {
-		objects.motionData.ModelTurnOver ();
+		objects.MotionData.ModelTurnOver ();
 	}
 	public void BtnMirrorRtoL_Click() {
-		objects.motionData.ModelMirror (true);
+		objects.MotionData.ModelMirror (true);
 	}
 	public void BtnMirrorLtoR_Click() {
-		objects.motionData.ModelMirror (false);
+		objects.MotionData.ModelMirror (false);
 	}
 	public void BtnCameraReset_Click() {
-		objects.modelViewController.CameraViewInitalize ();
+		objects.ModelViewController.CameraViewInitalize ();
 	}
 	public void BtnSample1_Click() {
 		SampleMotionRead (1);
@@ -232,7 +232,7 @@ public class MenuGUI : MonoBehaviour {	/// <summary>
 	/// </summary>
 	/// <param name="index">Index</param>
 	private void SampleMotionRead(int index) {
-		string path = ObjectsController.sampleMotionDirPath + "Sample" + index.ToString () + ".json";
+		string path = ObjectsController.SampleMotionDirPath + "Sample" + index.ToString () + ".json";
 		// パスがセットされていない→メソッド終了
 		if (string.IsNullOrEmpty (path))
 			return;
@@ -241,7 +241,7 @@ public class MenuGUI : MonoBehaviour {	/// <summary>
 		using (StreamReader reader = new StreamReader (path)) {
 			readStr = reader.ReadToEnd ();
 		}
-		objects.panelFrames.MotionFramesRead (readStr);
+		objects.PanelFrames.MotionFramesRead (readStr);
 	}
 	/// <summary>
 	///  スロット番号更新メソッド（イベント呼び出し．InputFieldSlotの値が変更された．）
@@ -260,7 +260,7 @@ public class MenuGUI : MonoBehaviour {	/// <summary>
 			} else {
 				slotNum = tmp;
 			}
-			objects.motionData.slotNum = slotNum;
+			objects.MotionData.SlotNum = slotNum;
 		} else {
 			// 入力された文字が数値でなかったので復元
 			inputFieldSlot.text = slotNum.ToString();
@@ -275,7 +275,7 @@ public class MenuGUI : MonoBehaviour {	/// <summary>
 		if (value >= SLOT_MINIMIZE && value <= SLOT_MAXIMIZE) {
 			slotNum = value;
 			inputFieldSlot.text = value.ToString();
-			objects.motionData.slotNum = value;
+			objects.MotionData.SlotNum = value;
 		}
 
 	}

@@ -6,45 +6,92 @@ using LitJson;
 using PLEN;
 
 public class MotionData : MonoBehaviour {
-	public ObjectsController objects;
 
-	// 関節オブジェクト類（これらにセットされているオブジェクトの角度を変更していく）（インスペクタで初期化）
-	public GameObject LeftShoulderP;
-	public GameObject LeftThighY;
-	public GameObject LeftShoulderR;
-	public GameObject LeftElbowR;
-	public GameObject LeftThighR;
-	public GameObject LeftThighP;
-	public GameObject LeftKneeP;
-	public GameObject LeftFootP;
-	public GameObject LeftFootR;
-	public GameObject RightShoulderP;
-	public GameObject RightThighY;
-	public GameObject RightShoulderR;
-	public GameObject RightElbowR;
-	public GameObject RightThighR;
-	public GameObject RightThighP;
-	public GameObject RightKneeP;
-	public GameObject RightFootP;
-	public GameObject RightFootR;
-	/// <summary>
-	/// 現在選択中のフレームインデックス
-	/// </summary>
-	public int index;
-	/// <summary>
-	/// 関節オブジェクトリスト（インスペクタで初期化）
-	/// (LeftShoulderP，...，RightFootR(18関節)がリスト化されている)
-	/// </summary>
-	public List<GameObject> modelJointList = new List<GameObject> ();
-	public List<Frame> frameList =  new List<Frame>();
-	public int slotNum;
-	/// <summary>
-	/// 初期状態フレーム
-	/// </summary>
-	public static Frame defaultFrame;
+    /// <summary>
+    /// 初期状態フレーム
+    /// </summary>
+    public static Frame defaultFrame;
 
-	void Start () {
-		index = 0;
+    /// <summary>
+    /// 現在選択中のフレームインデックス
+    /// </summary>
+    public int Index {
+        get {
+            return index;
+        }
+        set {
+            index = value;
+        }
+    }
+    /// <summary>
+    /// 関節オブジェクトリスト
+    /// (LeftShoulderP，...，RightFootR(18関節)がリスト化されている)
+    /// </summary>
+    public List<GameObject> ModelJointList {
+        get {
+            return modelJointList;
+        }
+    }
+    public List<Frame> FrameList {
+        get {
+            return frameList;
+        }
+    }
+    public int SlotNum {
+        get {
+            return slotNum;
+        }
+    }
+
+    [SerializeField]
+    private ObjectsController objects;
+
+    // 関節オブジェクト類（これらにセットされているオブジェクトの角度を変更していく）（インスペクタで初期化）
+    [SerializeField]
+	private GameObject LeftShoulderP;
+    [SerializeField]
+    private GameObject LeftThighY;
+    [SerializeField]
+    private GameObject LeftShoulderR;
+    [SerializeField]
+    private GameObject LeftElbowR;
+    [SerializeField]
+    private GameObject LeftThighR;
+    [SerializeField]
+    private GameObject LeftThighP;
+    [SerializeField]
+    private GameObject LeftKneeP;
+    [SerializeField]
+    private GameObject LeftFootP;
+    [SerializeField]
+    private GameObject LeftFootR;
+    [SerializeField]
+    private GameObject RightShoulderP;
+    [SerializeField]
+    private GameObject RightThighY;
+    [SerializeField]
+    private GameObject RightShoulderR;
+    [SerializeField]
+    private GameObject RightElbowR;
+    [SerializeField]
+    private GameObject RightThighR;
+    [SerializeField]
+    private GameObject RightThighP;
+    [SerializeField]
+    private GameObject RightKneeP;
+    [SerializeField]
+    private GameObject RightFootP;
+    [SerializeField]
+    private GameObject RightFootR;
+ 
+    private List<GameObject> modelJointList = new List<GameObject> ();
+	private List<Frame> frameList =  new List<Frame>();
+	private int slotNum;
+
+    private int index;
+
+    void Start () {
+		Index = 0;
 		// リストに関節オブジェクトを追加
 		modelJointList.Add (LeftShoulderP);
 		modelJointList.Add (LeftThighY);
@@ -71,7 +118,9 @@ public class MotionData : MonoBehaviour {
 	}
 
 	void Update() {
+        //nop
 	}
+
 	/// <summary>
 	///  新規フレーム作成メソッド
 	/// </summary>
@@ -87,10 +136,10 @@ public class MotionData : MonoBehaviour {
 		// フレーム作成．リストに追加
 		if (newFrameIndex < 0) {
 			frameList.Add (new Frame (baseFrame));
-			index = frameList.Count - 1;
+			Index = frameList.Count - 1;
 		} else {
 			frameList.Insert (newFrameIndex, new Frame (baseFrame));
-			index = newFrameIndex;
+			Index = newFrameIndex;
 		}
 	}
 	/// <summary>
@@ -99,8 +148,8 @@ public class MotionData : MonoBehaviour {
 	/// <param name="selectedIndex">選択フレームインデックス</param>
 	public void ChangeSelectFrame(int selectedIndex) {
 		// インデックス変更．モデル回転．
-		index = selectedIndex;
-		modelAllJointRotation (frameList [index]);
+		Index = selectedIndex;
+		modelAllJointRotation (frameList [Index]);
 	}
 	/// <summary>
 	///  フレーム初期化メソッド
@@ -123,8 +172,8 @@ public class MotionData : MonoBehaviour {
 	/// <param name="removeIndex">削除フレームインデックス</param>
 	public void FrameRemove(int removeIndex) {
 		frameList.RemoveAt (removeIndex);
-		if (index > frameList.Count - 1)
-			index = frameList.Count - 1;
+		if (Index > frameList.Count - 1)
+			Index = frameList.Count - 1;
 
 	}
 	/// <summary>
@@ -133,20 +182,20 @@ public class MotionData : MonoBehaviour {
 	public void ModelTurnOver() {
 		// 現在の角度情報をすべて保存
 		float[] anglesTmp = new float[modelJointList.Count];
-		for (int i = 0; i < frameList [index].jointAngles.Length; i++) {
-			anglesTmp[i] = frameList [index].jointAngles [i].Angle;
+		for (int i = 0; i < frameList [Index].jointAngles.Length; i++) {
+			anglesTmp[i] = frameList [Index].jointAngles [i].Angle;
 		}
 		// 一度フレームを初期状態にし，左右の角度情報を入れ替える
 		// Note...DATA_ROTATE_DIRECTIONで符号を調整しているため，必ずかける必要あり
-		FrameInitialize (index, false);
+		FrameInitialize (Index, false);
 		int offset = modelJointList.Count / 2;
 		// 左半身
 		for (int i = 0; i < offset; i++) {
-			frameList [index].JointRotate (i, anglesTmp[i+offset] * Frame.DATA_ROTATE_DIRECTION[i+offset], false);
+			frameList [Index].JointRotate (i, anglesTmp[i+offset] * Frame.DATA_ROTATE_DIRECTION[i+offset], false);
 		}
 		// 右半身
 		for (int i = offset; i < modelJointList.Count; i++) {
-			frameList [index].JointRotate (i,anglesTmp[i-offset] * Frame.DATA_ROTATE_DIRECTION[i-offset], false);
+			frameList [Index].JointRotate (i,anglesTmp[i-offset] * Frame.DATA_ROTATE_DIRECTION[i-offset], false);
 		}
 	}
 	/// <summary>
@@ -158,14 +207,14 @@ public class MotionData : MonoBehaviour {
 
 		for (int i = 0; i < modelJointList.Count / 2; i++) {
 			if (isBaseTheRight == true) {
-				frameList [index].jointAngles [i] = new JointAngle(defaultFrame.jointAngles [i]);
-				frameList [index].JointRotate (i, frameList [index].jointAngles [i + offset].Angle
+				frameList [Index].jointAngles [i] = new JointAngle(defaultFrame.jointAngles [i]);
+				frameList [Index].JointRotate (i, frameList [Index].jointAngles [i + offset].Angle
 					* Frame.DATA_ROTATE_DIRECTION [i + offset], false);
 			}
 			// 左半身を右半身へ
 			else {
-				frameList [index].jointAngles [i + offset] = new JointAngle(defaultFrame.jointAngles [i + offset]);
-				frameList [index].JointRotate (i + offset, frameList [index].jointAngles [i].Angle
+				frameList [Index].jointAngles [i + offset] = new JointAngle(defaultFrame.jointAngles [i + offset]);
+				frameList [Index].JointRotate (i + offset, frameList [Index].jointAngles [i].Angle
 					* Frame.DATA_ROTATE_DIRECTION [i], false);
 			}
 		}
@@ -227,7 +276,7 @@ public class MotionData : MonoBehaviour {
 
 			}
 			// スロット番号更新
-			objects.menuController.InputFieldSlotUpdate(jsonMain.slot);
+			objects.MenuController.InputFieldSlotUpdate(jsonMain.slot);
 			return true;
 		}catch(Exception ex) {
 			Debug.LogError (ex.Message);

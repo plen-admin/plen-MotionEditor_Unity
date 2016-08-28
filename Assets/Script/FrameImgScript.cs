@@ -35,7 +35,7 @@ public class FrameImgScript : MonoBehaviour {
 	}
 
 	void Awake() {
-		framingSavePath = ObjectsController.tmpFilePath + "Frames/";
+		framingSavePath = ObjectsController.TmpFilePath + "Frames/";
 		if (!Directory.Exists (framingSavePath)) {
 			Directory.CreateDirectory (framingSavePath);
 		}
@@ -56,7 +56,7 @@ public class FrameImgScript : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		if (objectsController.isFrameRelationWaitRequest == true) {
+		if (objectsController.IsFrameRelationWaitRequest == true) {
 			if (isWait == false) {
 				foreach (Button btn in btnArray)
 					btn.enabled = false;
@@ -71,7 +71,7 @@ public class FrameImgScript : MonoBehaviour {
 		}
 
 
-		if (objectsController.isAllObjectWaitRequest == false) {
+		if (objectsController.IsAllObjectWaitRequest == false) {
 			if (Input.GetMouseButtonDown (0)) {
 				if (this.GetComponent<Collider2D> ().OverlapPoint (Input.mousePosition)
 				    && !btnRemoveObject.GetComponent<Collider2D> ().OverlapPoint (Input.mousePosition)) {
@@ -86,24 +86,24 @@ public class FrameImgScript : MonoBehaviour {
 			isReplace = true;
 			SaveFrameImgTex ();
 			FrameImgTexPngReplace (index, index - 1);
-			objectsController.panelFrames.FrameImgReplace (index, index - 1);
+			objectsController.PanelFrames.FrameImgReplace (index, index - 1);
 			isReplace = false;
 		}
 	}
 
 	public void BtnNext_Click() {
-		if (index < objectsController.panelFrames.FrameCount - 1) {
+		if (index < objectsController.PanelFrames.FrameCount - 1) {
 			isReplace = true;
 			SaveFrameImgTex ();
 			FrameImgTexPngReplace (index, index + 1);
-			objectsController.panelFrames.FrameImgReplace (index, index + 1);
+			objectsController.PanelFrames.FrameImgReplace (index, index + 1);
 			isReplace = false;
 		}
 	}
 
 
 	public void BtnRemove_Click() {
-		if (objectsController.isAllObjectWaitRequest == false) {
+		if (objectsController.IsAllObjectWaitRequest == false) {
 			PanelFramesScript panelFrames = parentPanelFrames.GetComponent<PanelFramesScript> ();
 			// フレームが2つ以上ある場合，自フレームを削除する
 			if (panelFrames.FrameCount > 1) {
@@ -112,7 +112,7 @@ public class FrameImgScript : MonoBehaviour {
 			} 
 			// 1フレームのみの場合，そのフレームを初期化する 
 			else {
-				objectsController.motionData.FrameInitialize (0);
+				objectsController.MotionData.FrameInitialize (0);
 				parentPanelFrames.ChildFrameImgClick (0);
 
 			}
@@ -145,8 +145,7 @@ public class FrameImgScript : MonoBehaviour {
 				}
 				thisRawImg.texture = ReadFrameImgTexPng ();
 			}
-			isActive = false;
-			
+            isActive = false;
 		}
 	}
 

@@ -41,7 +41,7 @@ public class DialogScript : MonoBehaviour {
 	/// <param name="message">メッセージ</param>
 	public void Show(string title, string message) {
 		// フラグを設定し，画面表示	
-		objects.isDialogShowing = true;
+		objects.IsDialogShowing = true;
 		isBtnClicked = false;
 		isActive = true;
 		returnValue = false;
@@ -59,7 +59,7 @@ public class DialogScript : MonoBehaviour {
 		returnValue = true;
 		isActive = false;
 		DialogFinished (true);
-		objects.isDialogShowing = false;
+		objects.IsDialogShowing = false;
 	}
 	/// <summary>
 	/// Cancelボタン押下メソッド（イベント呼び出し）
@@ -71,7 +71,7 @@ public class DialogScript : MonoBehaviour {
 		returnValue = false;
 		isActive = false;
 		DialogFinished (false);
-		objects.isDialogShowing = false;
+		objects.IsDialogShowing = false;
 	}
 
 	// Update is called once per frame

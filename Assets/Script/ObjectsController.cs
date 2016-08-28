@@ -2,134 +2,152 @@
 using System.Collections;
 
 public class ObjectsController : MonoBehaviour {
-	/// <summary>
-	///  モーションデータ
-	/// </summary>
-	public MotionData motionData;
-	/// <summary>
-	/// メニューコントローラ
-	/// </summary>
-	public MenuGUI menuController;
-	/// <summary>
-	/// モデル表示コントローラ
-	/// </summary>
-	public ModelViewCamera modelViewController;
-	/// <summary>
-	/// ダイアログ
-	/// </summary>
-	public DialogScript dialog;
-	/// <summary>
-	/// ファイル選択（OpenFileDialog，SaveFileDialog）
-	/// </summary>
-	public FileChooser fileChooser;
-	/// <summary>
-	///  モーションインストーラ
-	/// </summary>
-	public MotionInstall motionInstall;
-	/// <summary>
-	/// モデルアニメーション
-	/// </summary>
-	public PLENModelAnimation plenAnimation;
-	/// <summary>
-	/// 全フレーム表示区域．フレーム関連の処理も担う．
-	/// </summary>
-	public PanelFramesScript panelFrames;
-	/// <summary>
-	///  キャンバスのRectTransform．ディスプレイにはこのキャンバス領域が表示される．
-	/// </summary>
-	public RectTransform dispCanvasRectTransform;
-	/// <summary>
-	/// アニメーション再生フラグ
-	/// </summary>
-	public bool isAnimationPlaying {
+
+    public MotionData MotionData {
+        get { return motionData;
+        }
+    }
+    public MenuGUI MenuController {
+        get {
+            return menuController;
+        }
+    }
+    public ModelViewCamera ModelViewController {
+        get {
+            return modelViewController;
+        }
+    }
+    public DialogScript Dialog {
+        get {
+            return dialog;
+        }
+    }
+	public FileChooser FileChooser {
+        get {
+            return fileChooser;
+        }
+    }
+    public MotionInstall MotionInstall {
+        get {
+            return motionInstall;
+        }
+    }
+    public PLENModelAnimation PlenAnimation {
+        get {
+            return plenAnimation;
+        }
+    }
+    public PanelFramesScript PanelFrames {
+        get {
+            return panelFrames;
+        }
+    }
+
+    public RectTransform DispCanvasRectTransform {
+        get {
+            return dispCanvasRectTransform;
+        }
+    }
+	public bool IsAnimationPlaying {
 		get { 
-			return _isAnimationPlaying;
+			return isAnimationPlaying;
 		}
 		set {
-			_isAnimationPlaying = value;
+			isAnimationPlaying = value;
 		}
 	}
-	/// <summary>
-	/// 全オブジェクト待機フラグ
-	/// </summary>
-	/// <value><c>true</c> if is all object wait request; otherwise, <c>false</c>.</value>
-	public bool isAllObjectWaitRequest {
+	public bool IsAllObjectWaitRequest {
 		get { 
-			return (_isAllObjectWaitRequest | _isDialogShowing); 
+			return (isAllObjectWaitRequest | isDialogShowing); 
 		}
 		set {
-			_isAllObjectWaitRequest = value;
+			isAllObjectWaitRequest = value;
 		}
 	}
-	/// <summary>
-	///  Dialog表示中メソッド
-	/// </summary>
-	public bool isDialogShowing {
+	public bool IsDialogShowing {
 		get {
-			return _isDialogShowing; 
+			return isDialogShowing; 
 		}
 		set {
-			_isDialogShowing = value;
+			isDialogShowing = value;
 		}
 	}
-	/// <summary>
-	/// フレーム表示区域待機フラグ
-	/// </summary>
-	public bool isFrameRelationWaitRequest {
+	public bool IsFrameRelationWaitRequest {
 		get {
-			return (_isAllObjectWaitRequest | _isAnimationPlaying | _isAnimationPlaying | _isFrameRelationWaitRequest);
+			return (isAllObjectWaitRequest | isAnimationPlaying | isAnimationPlaying | isFrameRelationWaitRequest);
 		}
 		set {
-			_isFrameRelationWaitRequest = value;
+			isFrameRelationWaitRequest = value;
 		}
-	}
-	/// <summary>
-	///  一時ファイル保存先（読み取り専用）
-	/// </summary>
-	public  static string tmpFilePath {
-		get { return _tmpFilePath; }
 	}
 
-	public static string externalFilePath {
-		get { return _externalFilePath; }
+	public  static string TmpFilePath {
+		get {
+            return tmpFilePath;
+        }
 	}
-	public static string sampleMotionDirPath {
-		get { return _sampleMotionDirPath; }
+
+	public static string ExternalFilePath {
+		get {
+            return externalFilePath;
+        }
 	}
-	private static string _tmpFilePath;
-	private static string _externalFilePath;
-	private static string _sampleMotionDirPath;
-	private bool _isAnimationPlaying;
-	private bool _isFrameRelationWaitRequest;
-	private bool _isAllObjectWaitRequest;
-	private bool _isDialogShowing;
+	public static string SampleMotionDirPath {
+		get {
+            return sampleMotionDirPath;
+        }
+	}
+
+    [SerializeField]
+    private MotionData motionData;
+    [SerializeField]
+    private MenuGUI menuController;
+    [SerializeField]
+    private ModelViewCamera modelViewController;
+    [SerializeField]
+    private DialogScript dialog;
+    [SerializeField]
+    private FileChooser fileChooser;
+    [SerializeField]
+    private MotionInstall motionInstall;
+    [SerializeField]
+    private PLENModelAnimation plenAnimation;
+    [SerializeField]
+    private PanelFramesScript panelFrames;
+    [SerializeField]
+    private RectTransform dispCanvasRectTransform;
+
+    private static string tmpFilePath;
+	private static string externalFilePath;
+	private static string sampleMotionDirPath;
+	private bool isAnimationPlaying;
+	private bool isFrameRelationWaitRequest;
+	private bool isAllObjectWaitRequest;
+	private bool isDialogShowing;
 
 	void Awake() {
 		if (Application.platform == RuntimePlatform.WindowsPlayer) {
-			_tmpFilePath = Application.dataPath + "/../tmp/";
-			_externalFilePath = Application.dataPath + "/../Plugins/Windows/";
-			_sampleMotionDirPath = Application.dataPath + "/../Plugins/SampleMotion/";
+			tmpFilePath = Application.dataPath + "/../tmp/";
+			externalFilePath = Application.dataPath + "/../Plugins/Windows/";
+			sampleMotionDirPath = Application.dataPath + "/../Plugins/SampleMotion/";
 		} else if (Application.platform == RuntimePlatform.OSXPlayer) {
-			_tmpFilePath = Application.dataPath + "/../../tmp/";
-			_externalFilePath = Application.dataPath + "/../../Plugins/OSX/";
-			_sampleMotionDirPath = Application.dataPath + "/../../Plugins/SampleMotion/";
+			tmpFilePath = Application.dataPath + "/../../tmp/";
+			externalFilePath = Application.dataPath + "/../../Plugins/OSX/";
+			sampleMotionDirPath = Application.dataPath + "/../../Plugins/SampleMotion/";
 		} else {
-			_tmpFilePath = Application.dataPath + "/tmp/";
-			_externalFilePath = Application.dataPath + "/Plugins/";
-			_sampleMotionDirPath = Application.dataPath + "/Plugins/SampleMotion/";
+			tmpFilePath = Application.dataPath + "/tmp/";
+			externalFilePath = Application.dataPath + "/Plugins/";
+			sampleMotionDirPath = Application.dataPath + "/Plugins/SampleMotion/";
 		}
 	}
 
 	// Use this for initialization
 	void Start () {
 		motionInstall = this.GetComponent<MotionInstall> ();
-
-
-
 	}
 	
 	// Update is called once per frame
 	void Update () {
-	
+	    //nop
 	}
 }
