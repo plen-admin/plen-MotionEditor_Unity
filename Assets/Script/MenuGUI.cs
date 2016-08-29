@@ -4,22 +4,25 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 
-public class MenuGUI : MonoBehaviour {	/// <summary>
-	/// 共通利用オブジェクト類管理インスタンス（インスペクタで初期化）
-	/// </summary>
-	public ObjectsController objects;
-	/// <summary>
-	/// メニュー部パネルのオブジェクト（インスペクタで初期化）
-	/// </summary>
-	public GameObject panelMenu;
-	/// <summary>
-	///  画面無効化用画像オブジェクト（インスペクタで初期化）
-	/// </summary>
-	public GameObject uiDisabledMaskImgObject;
-	/// <summary>
-	///  スロット番号入力部（インスペクタで初期化）
-	/// </summary>
-	public InputField inputFieldSlot;
+public class MenuGUI : MonoBehaviour {
+
+    [SerializeField]
+	private ObjectsController objects;
+    /// <summary>
+    /// メニュー部パネルのオブジェクト（インスペクタで初期化）
+    /// </summary>
+    [SerializeField]
+    private GameObject panelMenu;
+    /// <summary>
+    ///  画面無効化用画像オブジェクト（インスペクタで初期化）
+    /// </summary>
+    [SerializeField]
+    private GameObject uiDisabledMaskImgObject;
+    /// <summary>
+    ///  スロット番号入力部（インスペクタで初期化）
+    /// </summary>
+    [SerializeField]
+    private InputField inputFieldSlot;
 	/// <summary>
 	///  画面無効化用画像（uiDisabledMaskingObjectより）
 	/// </summary>

@@ -5,25 +5,26 @@ using System.Collections;
 public delegate void DialogFinishedEventHandler(bool isBtnOKClicked);
 
 public class DialogScript : MonoBehaviour {
-	/// <summary>
-	/// 共通利用オブジェクト類管理インスタンス（インスペクタで初期化）
-	/// </summary>
-	public ObjectsController objects;
-	/// <summary>
-	///  ダイアログ表示キャンバス（インスペクタで初期化）
-	/// </summary>
-	public Canvas displayCanvas;
-	/// <summary>
-	///  ダイアログタイトル（インスペクタで初期化）
-	/// </summary>
-	public Text labelTitle;
-	/// <summary>
-	///  ダイアログメッセージ（インスペクタで初期化）
-	/// </summary>
-	public Text labelMessage;
-	public bool isBtnClicked = false;
-	public bool isActive = false;
-	public bool returnValue;
+    /// <summary>
+    /// 共通利用オブジェクト類管理インスタンス（インスペクタで初期化）
+    /// </summary>
+    [SerializeField]
+    private ObjectsController objects;
+    /// <summary>
+    ///  ダイアログ表示キャンバス（インスペクタで初期化）
+    /// </summary>
+    [SerializeField]
+    private Canvas displayCanvas;
+    /// <summary>
+    ///  ダイアログタイトル（インスペクタで初期化）
+    /// </summary>
+    [SerializeField]
+    private Text labelTitle;
+    /// <summary>
+    ///  ダイアログメッセージ（インスペクタで初期化）
+    /// </summary>
+    [SerializeField]
+    private Text labelMessage;
 	/// <summary>
 	///  ダイアログ終了イベント（引数...true：OKボタン押下，false：それ以外）
 	/// </summary>
@@ -42,9 +43,6 @@ public class DialogScript : MonoBehaviour {
 	public void Show(string title, string message) {
 		// フラグを設定し，画面表示	
 		objects.IsDialogShowing = true;
-		isBtnClicked = false;
-		isActive = true;
-		returnValue = false;
 		labelTitle.text = title;
 		labelMessage.text = message;
 		displayCanvas.enabled = true;
@@ -55,9 +53,6 @@ public class DialogScript : MonoBehaviour {
 	public void BtnOK_Click() {
 		// フラグを整理し，OKが押されたことを通知
 		displayCanvas.enabled = false;
-		isBtnClicked = true;
-		returnValue = true;
-		isActive = false;
 		DialogFinished (true);
 		objects.IsDialogShowing = false;
 	}
@@ -67,9 +62,6 @@ public class DialogScript : MonoBehaviour {
 	public void BtnCancel_Click() {
 		// フラグを整理し，Cancelが押されたことを通知
 		displayCanvas.enabled = false;
-		isBtnClicked = true;
-		returnValue = false;
-		isActive = false;
 		DialogFinished (false);
 		objects.IsDialogShowing = false;
 	}

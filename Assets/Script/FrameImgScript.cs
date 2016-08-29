@@ -5,34 +5,50 @@ using System.IO;
 
 
 public class FrameImgScript : MonoBehaviour {
-	public ObjectsController objectsController;
-	public Frame thisFrame;
-	public Text labelFrame;
-	public Slider sliderTime;
-	public InputField inputFieldTime;
-	public PanelFramesScript parentPanelFrames;
-	public RenderTexture frameImgTex;
-	public GameObject btnRemoveObject;
+    public Frame ThisFrame {
+        get {
+            return thisFrame;
+        } set {
+            thisFrame = value;
+        }
+    }
+    public Slider SliderTime {
+        get {
+            return sliderTime;
+        }
+    }
+    public int Index {
+        get {
+            return index;
+        }
+        set {
+            index = value;
+            labelFrame.text = index.ToString();
+        }
+    }
+    private ObjectsController objects;
+    [SerializeField]
+    private Frame thisFrame;
+    [SerializeField]
+    private Text labelFrame;
+    [SerializeField]
+    private Slider sliderTime;
+    [SerializeField]
+    private InputField inputFieldTime;
+    [SerializeField]
+    private PanelFramesScript parentPanelFrames;
+    [SerializeField]
+    private RenderTexture frameImgTex;
+    [SerializeField]
+    private GameObject btnRemoveObject;
 	private Collider2D thisCollider;
 	private Button[] btnArray;
-	private int _index;
+	private int index;
 	private string framingSavePath;
-
 
 	private bool isActive;
 	private bool isReplace;
 	private bool isWait;
-	public bool isFadeOuted;
-
-	public int index {
-		get {
-			return _index; 
-		}
-		set {
-			_index = value;
-			labelFrame.text = _index.ToString ();
-		}
-	}
 
 	void Awake() {
 		framingSavePath = ObjectsController.TmpFilePath + "Frames/";
@@ -48,7 +64,7 @@ public class FrameImgScript : MonoBehaviour {
 		isWait = false;
 		thisCollider = this.GetComponent<Collider2D> ();
 		btnArray = this.GetComponentsInChildren<Button> ();
-		objectsController = GameObject.Find ("ObjectsController").GetComponent<ObjectsController> ();
+		objects = GameObject.Find ("ObjectsController").GetComponent<ObjectsController> ();
 		parentPanelFrames = GameObject.Find ("PanelFrames").GetComponent<PanelFramesScript> ();
 
 
@@ -56,7 +72,7 @@ public class FrameImgScript : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		if (objectsController.IsFrameRelationWaitRequest == true) {
+		if (objects.IsFrameRelationWaitRequest == true) {
 			if (isWait == false) {
 				foreach (Button btn in btnArray)
 					btn.enabled = false;
@@ -70,49 +86,48 @@ public class FrameImgScript : MonoBehaviour {
 			isWait = false;
 		}
 
-
-		if (objectsController.IsAllObjectWaitRequest == false) {
+		if (objects.IsAllObjectWaitRequest == false) {
 			if (Input.GetMouseButtonDown (0)) {
 				if (this.GetComponent<Collider2D> ().OverlapPoint (Input.mousePosition)
 				    && !btnRemoveObject.GetComponent<Collider2D> ().OverlapPoint (Input.mousePosition)) {
 
-					parentPanelFrames.ChildFrameImgClick (index);
+					parentPanelFrames.ChildFrameImgClick (Index);
 				}
 			}
 		}
 	}
 	public void BtnBack_Click() {
-		if (index > 0) {
+		if (Index > 0) {
 			isReplace = true;
 			SaveFrameImgTex ();
-			FrameImgTexPngReplace (index, index - 1);
-			objectsController.PanelFrames.FrameImgReplace (index, index - 1);
+			FrameImgTexPngReplace (Index, Index - 1);
+			objects.PanelFrames.FrameImgReplace (Index, Index - 1);
 			isReplace = false;
 		}
 	}
 
 	public void BtnNext_Click() {
-		if (index < objectsController.PanelFrames.FrameCount - 1) {
+		if (Index < objects.PanelFrames.FrameCount - 1) {
 			isReplace = true;
 			SaveFrameImgTex ();
-			FrameImgTexPngReplace (index, index + 1);
-			objectsController.PanelFrames.FrameImgReplace (index, index + 1);
+			FrameImgTexPngReplace (Index, Index + 1);
+			objects.PanelFrames.FrameImgReplace (Index, Index + 1);
 			isReplace = false;
 		}
 	}
 
 
 	public void BtnRemove_Click() {
-		if (objectsController.IsAllObjectWaitRequest == false) {
+		if (objects.IsAllObjectWaitRequest == false) {
 			PanelFramesScript panelFrames = parentPanelFrames.GetComponent<PanelFramesScript> ();
 			// フレームが2つ以上ある場合，自フレームを削除する
 			if (panelFrames.FrameCount > 1) {
-				panelFrames.isFramePlayingDestroyAnimation = true;
+				panelFrames.IsFramePlayingDestroyAnimation = true;
 				this.GetComponent<Animator> ().SetBool ("isDestroy", true);
 			} 
 			// 1フレームのみの場合，そのフレームを初期化する 
 			else {
-				objectsController.MotionData.FrameInitialize (0);
+				objects.MotionData.FrameInitialize (0);
 				parentPanelFrames.ChildFrameImgClick (0);
 
 			}
@@ -120,11 +135,11 @@ public class FrameImgScript : MonoBehaviour {
 	}
 
 	private void EndDestroyAnimation() {
-		parentPanelFrames.ChildFrameImgDestroy (index);
+		parentPanelFrames.ChildFrameImgDestroy (Index);
 	}
 
 	public void SelectedFrameImgChanged(int selectedIndex, bool isAnimating) {
-		if (selectedIndex == index) {
+		if (selectedIndex == Index) {
 			RawImage thisRawImg = this.GetComponent<RawImage> ();
 			thisRawImg.color = new Color (1.0f, 1.0f, 1.0f, 1.0f);
 			if (isAnimating == false) {
@@ -151,7 +166,7 @@ public class FrameImgScript : MonoBehaviour {
 
 	public void SliderTimeUpdate() {
 		inputFieldTime.text = sliderTime.value.ToString();
-		thisFrame.transitionTime = (int)sliderTime.value;
+		thisFrame.TransitionTime = (int)sliderTime.value;
 	}
 
 	public void InputFieldTimeUpdate() {
@@ -166,7 +181,7 @@ public class FrameImgScript : MonoBehaviour {
 				inputFieldTime.text = inputNum.ToString ();
 			}
 			sliderTime.value = inputNum;
-			thisFrame.transitionTime = inputNum;
+			thisFrame.TransitionTime = inputNum;
 		} else {
 			inputFieldTime.text = sliderTime.value.ToString ();
 		}
@@ -183,17 +198,17 @@ public class FrameImgScript : MonoBehaviour {
 		Texture2D saveTex = new Texture2D(frameImgTex.width, frameImgTex.height);
 		saveTex.ReadPixels (new Rect (0, 0, frameImgTex.width, frameImgTex.height), 0, 0);
 		var savePngBytes = saveTex.EncodeToPNG ();
-		System.IO.File.WriteAllBytes (framingSavePath + index.ToString() + ".png", savePngBytes);
+		System.IO.File.WriteAllBytes (framingSavePath + Index.ToString() + ".png", savePngBytes);
 		Destroy (saveTex);
 		RenderTexture.active = renderTexRT;
 	}
 
 
 	private Texture ReadFrameImgTexPng() {
-		if (!File.Exists (framingSavePath + index.ToString () + ".png"))
+		if (!File.Exists (framingSavePath + Index.ToString () + ".png"))
 			return null;
 
-		FileStream readStream = new FileStream (framingSavePath + index.ToString () + ".png", FileMode.Open, FileAccess.Read);
+		FileStream readStream = new FileStream (framingSavePath + Index.ToString () + ".png", FileMode.Open, FileAccess.Read);
 		BinaryReader binaryReader = new BinaryReader (readStream);
 		var binaryPng = binaryReader.ReadBytes ((int)binaryReader.BaseStream.Length);
 		Texture2D readPngTex = new Texture2D (frameImgTex.width, frameImgTex.height);

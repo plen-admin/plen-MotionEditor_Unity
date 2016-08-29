@@ -58,7 +58,7 @@ public class ObjectsController : MonoBehaviour {
 	}
 	public bool IsAllObjectWaitRequest {
 		get { 
-			return (isAllObjectWaitRequest | isDialogShowing); 
+			return (isAllObjectWaitRequest | IsDialogShowing); 
 		}
 		set {
 			isAllObjectWaitRequest = value;
@@ -74,7 +74,7 @@ public class ObjectsController : MonoBehaviour {
 	}
 	public bool IsFrameRelationWaitRequest {
 		get {
-			return (isAllObjectWaitRequest | isAnimationPlaying | isAnimationPlaying | isFrameRelationWaitRequest);
+			return (IsAllObjectWaitRequest | IsAnimationPlaying | IsAnimationPlaying | isFrameRelationWaitRequest);
 		}
 		set {
 			isFrameRelationWaitRequest = value;

@@ -3,31 +3,37 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.UI;
 
-public class ModelViewCamera : MonoBehaviour { 
-	/// <summary>
-	/// 共通利用オブジェクト類管理インスタンス（インスペクタで初期化）
-	/// </summary>
-	public ObjectsController objects;
-	/// <summary>
-	/// カメラの映像を表示するスペースを示すパネル（インスペクタで初期化）
-	/// </summary>
-	public RectTransform viewerPanel;
-	/// <summary>
-	/// viewerPanelを格納しているCanvas（インスペクタで初期化）
-	/// </summary>
-	public RectTransform viewerCanvas;
-	/// <summary>
-	/// カメラが捉えたいオブジェクト（インスペクタで初期化）
-	/// </summary>
-	public Transform lookAtModel;
-	/// <summary>
-	/// 回転基準座標
-	/// </summary>
-	public Transform rotReferenceCoord;
-	/// <summary>
-	///  角度インジケータオブジェクト（インスペクタで初期化）
-	/// </summary>
-	public GameObject angleIndicator;
+public class ModelViewCamera : MonoBehaviour {
+    /// <summary>
+    /// 共通利用オブジェクト類管理インスタンス（インスペクタで初期化）
+    /// </summary>
+    [SerializeField]
+    private ObjectsController objects;
+    /// <summary>
+    /// カメラの映像を表示するスペースを示すパネル（インスペクタで初期化）
+    /// </summary>
+    [SerializeField]
+    private RectTransform viewerPanel;
+    /// <summary>
+    /// viewerPanelを格納しているCanvas（インスペクタで初期化）
+    /// </summary>
+    [SerializeField]
+    private RectTransform viewerCanvas;
+    /// <summary>
+    /// カメラが捉えたいオブジェクト（インスペクタで初期化）
+    /// </summary>
+    [SerializeField]
+    private Transform lookAtModel;
+    /// <summary>
+    /// 回転基準座標
+    /// </summary>
+    [SerializeField]
+    private Transform rotReferenceCoord;
+    /// <summary>
+    ///  角度インジケータオブジェクト（インスペクタで初期化）
+    /// </summary>
+    [SerializeField]
+    private GameObject angleIndicator;
 	/// <summary>
 	/// マウスボタン押下フラグ(左，右，中）
 	/// </summary>
@@ -74,7 +80,7 @@ public class ModelViewCamera : MonoBehaviour {
 		this.GetComponent<Camera>().rect = new Rect (1 - viewerPanel.rect.width / viewerCanvas.rect.width
 		                             , 1 - viewerPanel.rect.height / viewerCanvas.rect.height
 		                             , viewerPanel.rect.width / viewerCanvas.rect.width
-		                              , viewerPanel.rect.height / viewerCanvas.rect.height);
+		                             , viewerPanel.rect.height / viewerCanvas.rect.height);
 
 		labelAngleIndicator = angleIndicator.GetComponentInChildren<Text> ();
 		angleIndicator.SetActive (false);
@@ -261,7 +267,7 @@ public class ModelViewCamera : MonoBehaviour {
 		objects.MotionData.FrameList [frameIndex].JointRotate (clickedJointName, 
 			(Input.mousePosition.y - posBefore.y) * 2.0f);
 
-		labelAngleIndicator.text = objects.MotionData.FrameList [frameIndex].jointAngles [(int)clickedJointName].Angle.ToString ();
+		labelAngleIndicator.text = objects.MotionData.FrameList [frameIndex].JointAngles [(int)clickedJointName].Angle.ToString ();
 		// 旧マウスポインタ座標更新
 		posBefore = Input.mousePosition;
 

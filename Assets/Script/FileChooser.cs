@@ -128,6 +128,7 @@ public class FileChooser : MonoBehaviour
 	#elif UNITY_STANDALONE_WIN
 	void Start()
 	{
+        //nop
 	}
 	/// <summary>
 	/// OpenFileDialog呼び出しメソッド
