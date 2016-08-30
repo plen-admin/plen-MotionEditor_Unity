@@ -3,7 +3,7 @@ using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 
-public class PanelFramesScript : MonoBehaviour {
+public class PanelFramesScript : MonoBehaviour, IObjects {
     /// <summary>
     /// フレーム削除アニメーション再生中フラグ
     /// Note...このフラグはフレーム（FrameImgScript)でセットされる
@@ -25,9 +25,8 @@ public class PanelFramesScript : MonoBehaviour {
         }
     }
     /// <summary>
-    /// 共通利用オブジェクト類管理インスタンス（インスペクタで初期化）
+    /// 共通利用オブジェクト類管理インスタンス
     /// </summary>
-    [SerializeField]
     private ObjectsController objects;
     /// <summary>
     /// frameImgのプレハブ（インスペクタで初期化）
@@ -88,6 +87,15 @@ public class PanelFramesScript : MonoBehaviour {
 
 	private Vector3 clickPos;
     private bool isFramePlayingDestroyAnimation = false;
+
+    public void Initialize(ObjectsController controller) {
+        objects = controller;
+        if (objects.PlenAnimation != null) {
+            objects.PlenAnimation.AnimationStarted += AnimationStarted;
+            objects.PlenAnimation.AnimationClipChanged += AnimationClipChanged;
+            objects.PlenAnimation.AnimationEnded += AnimationEnded;
+        }
+    }
 
     // Use this for initialization
     void Start () {
@@ -308,7 +316,7 @@ public class PanelFramesScript : MonoBehaviour {
 	///  アニメーション再生終了メソッド
 	/// </summary>
 	/// <param name="endClipIndex">再生終了クリップインデックス</param>
-	public void PlayAnimationEnded(int endClipIndex) {
+	public void AnimationEnded(int endClipIndex) {
 		// 再生終了した時点のインデックスを選択中に，通知する．
 		selectedIndex = endClipIndex;
 		CallSelectedFrameImgChanged (false);

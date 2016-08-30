@@ -4,9 +4,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 
-public class MenuGUI : MonoBehaviour {
-
-    [SerializeField]
+public class MenuGUI : MonoBehaviour, IObjects {
+    
 	private ObjectsController objects;
     /// <summary>
     /// メニュー部パネルのオブジェクト（インスペクタで初期化）
@@ -52,6 +51,11 @@ public class MenuGUI : MonoBehaviour {
 	/// </summary>
 	private bool isBtnsDisabled;
 
+    public void Initialize(ObjectsController controller) {
+        objects = controller;       
+        objects.Dialog.DialogFinished += new DialogFinishedEventHandler(DialogFinished);
+    }
+
 	// Use this for initialization
 	void Start () {
 		// スロット番号入力部初期化
@@ -59,14 +63,14 @@ public class MenuGUI : MonoBehaviour {
 		// 初期化
 		fileChooser = this.GetComponent<FileChooser> ();
 		btnArray = panelMenu.GetComponentsInChildren<Button> ();
-		isBtnsDisabled = false;	
-		// イベント登録
-		fileChooser.OpenFileDialogFinished += new OpenFileDialogFinishedEventHander (OpenFileDialogFinished);
-		fileChooser.SaveFileDialogFinished += new SaveFileDialogFinishedEventHander (SaveFileDialogFinished);
-		objects.Dialog.DialogFinished += new DialogFinishedEventHandler (DialogFinished);
+		isBtnsDisabled = false;
 
-		// PanelMenuのColliderを調整（画面解像度により大きさが変わるので）
-		BoxCollider2D collider = panelMenu.GetComponent<BoxCollider2D> ();
+        // イベント登録
+        fileChooser.OpenFileDialogFinished += new OpenFileDialogFinishedEventHander(OpenFileDialogFinished);
+        fileChooser.SaveFileDialogFinished += new SaveFileDialogFinishedEventHander(SaveFileDialogFinished);
+
+        // PanelMenuのColliderを調整（画面解像度により大きさが変わるので）
+        BoxCollider2D collider = panelMenu.GetComponent<BoxCollider2D> ();
 		Rect rect = panelMenu.GetComponent<RectTransform> ().rect;
 		collider.size = rect.size;
 		collider.offset = new Vector2 (rect.width / 2, rect.height / 2);

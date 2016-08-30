@@ -2,7 +2,15 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public class PLENModelAnimation : MonoBehaviour {
+public class PLENModelAnimation : MonoBehaviour, IObjects {
+    public delegate void AnimationStartedHandler(int startClipIndex);
+    public delegate void AnimationClipChangedHandler(int changeClipIndex);
+    public delegate void AnimationEndedHandler(int endClipIndex);
+
+    public event AnimationStartedHandler AnimationStarted;
+    public event AnimationClipChangedHandler AnimationClipChanged;
+    public event AnimationEndedHandler AnimationEnded;
+
     /// <summary>
     /// 再生中判定フラグ（読み取り専用）
     /// </summary>
@@ -12,9 +20,8 @@ public class PLENModelAnimation : MonoBehaviour {
         }
     }
     /// <summary>
-    /// 共通利用オブジェクト類管理インスタンス（インスペクタで初期化）
+    /// 共通利用オブジェクト類管理インスタンス
     /// </summary>
-    [SerializeField]
     private ObjectsController objects;
 	/// <summary>
 	/// アニメーションクリップリスト
@@ -45,6 +52,10 @@ public class PLENModelAnimation : MonoBehaviour {
 	/// </summary>
 	private int endIndex;
 
+    public void Initialize(ObjectsController controller) {
+        objects = controller;
+    }
+
 	// Use this for initialization
 	void Start () {
 		thisAnimation = this.GetComponent<Animation> ();
@@ -59,17 +70,17 @@ public class PLENModelAnimation : MonoBehaviour {
 				if (playingClip < animationClipList.Count - 1) {
 					playingClip++;
 					playingFrameIndex++;
-					objects.PanelFrames.AnimationClipChanged (playingClip);
+                    if (AnimationClipChanged != null)
+                        AnimationClipChanged(playingClip);
 					thisAnimation.Play (animationClipList [playingClip].name);
 				} else {
 					// 全アニメーションクリップが再生終了したので通知
 					isPlaying = false;
-					objects.PanelFrames.PlayAnimationEnded (endIndex);
-					objects.IsAnimationPlaying = false;
+                    if (AnimationEnded != null)
+                        AnimationEnded(endIndex);
 				}
 			}
 		}
-
 	}
 	/// <summary>
 	/// アニメーション停止メソッド
@@ -78,8 +89,8 @@ public class PLENModelAnimation : MonoBehaviour {
 		if (isPlaying == true) {
 			thisAnimation.Stop ();
 			isPlaying = false;
-			objects.PanelFrames.PlayAnimationEnded (playingFrameIndex);
-			objects.IsAnimationPlaying = false;
+            if (AnimationEnded != null)
+                AnimationEnded(playingFrameIndex);
 		}
 	}
 
@@ -112,8 +123,8 @@ public class PLENModelAnimation : MonoBehaviour {
 		playingFrameIndex = startIndex;
 		isPlaying = true;
 		// アニメーション再生通知
-		objects.PanelFrames.AnimationStarted (startIndex);
-		objects.IsAnimationPlaying = true;
+        if (AnimationStarted != null)
+            AnimationStarted(startIndex);
 		// アニメーション再生
 		thisAnimation.Play (animationClipList [0].name);
 	}

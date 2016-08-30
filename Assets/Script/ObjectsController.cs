@@ -1,6 +1,10 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+public interface IObjects {
+    void Initialize(ObjectsController controller);
+}
+
 public class ObjectsController : MonoBehaviour {
 
     public MotionData MotionData {
@@ -139,7 +143,34 @@ public class ObjectsController : MonoBehaviour {
 			externalFilePath = Application.dataPath + "/Plugins/";
 			sampleMotionDirPath = Application.dataPath + "/Plugins/SampleMotion/";
 		}
-	}
+        if (PlenAnimation != null) {
+            PlenAnimation.Initialize(this);
+            PlenAnimation.AnimationStarted += (_) => {
+                IsAnimationPlaying = true;
+            };
+            PlenAnimation.AnimationEnded += (_) => {
+                IsAnimationPlaying = false;
+            };
+        }
+        if (PanelFrames != null) {
+            PanelFrames.Initialize(this);
+        }
+        if (MotionData != null) {
+            MotionData.Initialize(this);
+        }
+        if (ModelViewController != null) {
+            ModelViewController.Initialize(this);
+        }
+        if (MenuController != null) {
+            MenuController.Initialize(this);
+        }
+        if (FileChooser != null) {
+            FileChooser.Initialize(this);
+        }
+        if (Dialog != null) {
+            Dialog.Initialize(this);
+        }
+    }
 
 	// Use this for initialization
 	void Start () {

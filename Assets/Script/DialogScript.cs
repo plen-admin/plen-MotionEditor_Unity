@@ -4,11 +4,10 @@ using System.Collections;
 
 public delegate void DialogFinishedEventHandler(bool isBtnOKClicked);
 
-public class DialogScript : MonoBehaviour {
+public class DialogScript : MonoBehaviour, IObjects {
     /// <summary>
-    /// 共通利用オブジェクト類管理インスタンス（インスペクタで初期化）
+    /// 共通利用オブジェクト類管理インスタンス
     /// </summary>
-    [SerializeField]
     private ObjectsController objects;
     /// <summary>
     ///  ダイアログ表示キャンバス（インスペクタで初期化）
@@ -29,6 +28,10 @@ public class DialogScript : MonoBehaviour {
 	///  ダイアログ終了イベント（引数...true：OKボタン押下，false：それ以外）
 	/// </summary>
 	public event DialogFinishedEventHandler DialogFinished;
+
+    public void Initialize(ObjectsController controller) {
+        objects = controller;
+    }
 
 	// Use this for initialization
 	void Start () {

@@ -66,8 +66,6 @@ public class FrameImgScript : MonoBehaviour {
 		btnArray = this.GetComponentsInChildren<Button> ();
 		objects = GameObject.Find ("ObjectsController").GetComponent<ObjectsController> ();
 		parentPanelFrames = GameObject.Find ("PanelFrames").GetComponent<PanelFramesScript> ();
-
-
 	}
 	
 	// Update is called once per frame

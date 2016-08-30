@@ -3,11 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.UI;
 
-public class ModelViewCamera : MonoBehaviour {
+public class ModelViewCamera : MonoBehaviour, IObjects {
     /// <summary>
-    /// 共通利用オブジェクト類管理インスタンス（インスペクタで初期化）
+    /// 共通利用オブジェクト類管理インスタンス
     /// </summary>
-    [SerializeField]
     private ObjectsController objects;
     /// <summary>
     /// カメラの映像を表示するスペースを示すパネル（インスペクタで初期化）
@@ -74,7 +73,10 @@ public class ModelViewCamera : MonoBehaviour {
 	private Vector3 defaultModelPos;
 	private Quaternion defaultCameraRot;
 
-	/***** 初回実行メソッド（オーバーライド） *****/
+    public void Initialize(ObjectsController controller) {
+        objects = controller;
+    }
+
 	void Start () {
 		// カメラの表示座標を調整（viewerPanelにぴったりはまるように調整）
 		this.GetComponent<Camera>().rect = new Rect (1 - viewerPanel.rect.width / viewerCanvas.rect.width

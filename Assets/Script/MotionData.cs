@@ -5,7 +5,7 @@ using System;
 using LitJson;
 using PLEN;
 
-public class MotionData : MonoBehaviour {
+public class MotionData : MonoBehaviour, IObjects {
 
     /// <summary>
     /// 初期状態フレーム
@@ -44,8 +44,7 @@ public class MotionData : MonoBehaviour {
 			slotNum = value;
 		}
     }
-
-    [SerializeField]
+    
     private ObjectsController objects;
 
     // 関節オブジェクト類（これらにセットされているオブジェクトの角度を変更していく）（インスペクタで初期化）
@@ -91,6 +90,10 @@ public class MotionData : MonoBehaviour {
 	private int slotNum;
 
     private int index;
+
+    public void Initialize(ObjectsController controller) {
+        objects = controller;
+    }
 
     void Start () {
 		Index = 0;
@@ -192,6 +195,8 @@ public class MotionData : MonoBehaviour {
 		// Note...DATA_ROTATE_DIRECTIONで符号を調整しているため，必ずかける必要あり
 		FrameInitialize (Index, false);
 		int offset = modelJoints.Count / 2;
+
+
 		// 左半身
 		for (int i = 0; i < offset; i++) {
 			frameList [Index].JointRotate (i, anglesTmp[i+offset] * Frame.DATA_ROTATE_DIRECTION[i+offset], false);
