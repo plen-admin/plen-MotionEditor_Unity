@@ -3,31 +3,36 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.UI;
 
-public class ModelViewCamera : MonoBehaviour { 
-	/// <summary>
-	/// 共通利用オブジェクト類管理インスタンス（インスペクタで初期化）
-	/// </summary>
-	public ObjectsController objects;
-	/// <summary>
-	/// カメラの映像を表示するスペースを示すパネル（インスペクタで初期化）
-	/// </summary>
-	public RectTransform viewerPanel;
-	/// <summary>
-	/// viewerPanelを格納しているCanvas（インスペクタで初期化）
-	/// </summary>
-	public RectTransform viewerCanvas;
-	/// <summary>
-	/// カメラが捉えたいオブジェクト（インスペクタで初期化）
-	/// </summary>
-	public Transform lookAtModel;
-	/// <summary>
-	/// 回転基準座標
-	/// </summary>
-	public Transform rotReferenceCoord;
-	/// <summary>
-	///  角度インジケータオブジェクト（インスペクタで初期化）
-	/// </summary>
-	public GameObject angleIndicator;
+public class ModelViewCamera : MonoBehaviour, IObjects {
+    /// <summary>
+    /// 共通利用オブジェクト類管理インスタンス
+    /// </summary>
+    private ObjectsController objects;
+    /// <summary>
+    /// カメラの映像を表示するスペースを示すパネル（インスペクタで初期化）
+    /// </summary>
+    [SerializeField]
+    private RectTransform viewerPanel;
+    /// <summary>
+    /// viewerPanelを格納しているCanvas（インスペクタで初期化）
+    /// </summary>
+    [SerializeField]
+    private RectTransform viewerCanvas;
+    /// <summary>
+    /// カメラが捉えたいオブジェクト（インスペクタで初期化）
+    /// </summary>
+    [SerializeField]
+    private Transform lookAtModel;
+    /// <summary>
+    /// 回転基準座標
+    /// </summary>
+    [SerializeField]
+    private Transform rotReferenceCoord;
+    /// <summary>
+    ///  角度インジケータオブジェクト（インスペクタで初期化）
+    /// </summary>
+    [SerializeField]
+    private GameObject angleIndicator;
 	/// <summary>
 	/// マウスボタン押下フラグ(左，右，中）
 	/// </summary>
@@ -68,13 +73,16 @@ public class ModelViewCamera : MonoBehaviour {
 	private Vector3 defaultModelPos;
 	private Quaternion defaultCameraRot;
 
-	/***** 初回実行メソッド（オーバーライド） *****/
+    public void Initialize(ObjectsController controller) {
+        objects = controller;
+    }
+
 	void Start () {
 		// カメラの表示座標を調整（viewerPanelにぴったりはまるように調整）
 		this.GetComponent<Camera>().rect = new Rect (1 - viewerPanel.rect.width / viewerCanvas.rect.width
 		                             , 1 - viewerPanel.rect.height / viewerCanvas.rect.height
 		                             , viewerPanel.rect.width / viewerCanvas.rect.width
-		                              , viewerPanel.rect.height / viewerCanvas.rect.height);
+		                             , viewerPanel.rect.height / viewerCanvas.rect.height);
 
 		labelAngleIndicator = angleIndicator.GetComponentInChildren<Text> ();
 		angleIndicator.SetActive (false);
@@ -95,7 +103,7 @@ public class ModelViewCamera : MonoBehaviour {
 		// マウスポインタが指定のパネル内にあり，かつmenu（ダイアログ表示
 		// note...ダイアログ表示時は誤作動防止のため操作を無効にする
 		if (viewerPanel.GetComponent<Collider2D> ().OverlapPoint (Input.mousePosition)
-			&& objects.isAllObjectWaitRequest == false) {
+			&& objects.IsAllObjectWaitRequest == false) {
 
 			// ホイールの回転量に合わせてカメラをズームイン（or ズームアウト）させる
 			transform.Translate (new Vector3 (0.0f, 0.0f, Input.GetAxis ("Mouse ScrollWheel")));
@@ -105,7 +113,7 @@ public class ModelViewCamera : MonoBehaviour {
 			if (Input.GetMouseButton (0)) {
 				// モデル可動パーツリストを作成
 				if (AdjustableModelParts == null) {
-					AdjustableModelParts = new List<GameObject> (objects.motionData.modelJointList);
+					AdjustableModelParts = new List<GameObject> (objects.MotionData.ModelJointList);
 				}
 				// 押下した瞬間
 				if (isMouseDown [0] == false) {
@@ -138,7 +146,7 @@ public class ModelViewCamera : MonoBehaviour {
 					CameraRotation ();
 				} else {
 					// 可動パーツをクリック（アニメーション再生時は操作不可に）
-					if (objects.isAnimationPlaying == false) {
+					if (objects.IsAnimationPlaying == false) {
 						JointRotation ();
 					}
 				}
@@ -253,15 +261,15 @@ public class ModelViewCamera : MonoBehaviour {
 	///  関節オブジェクト回転メソッド
 	/// </summary>
 	private void JointRotation() {
-		int frameIndex = objects.motionData.index;
+		int frameIndex = objects.MotionData.Index;
 		// 選択した関節名を取得
 		PLEN.JointName clickedJointName = clickedModelPart.GetComponent<JointParameter> ().Name;
 
 		// オブジェクト回転（回転量はマウスy座標の変位量）
-		objects.motionData.frameList [frameIndex].JointRotate (clickedJointName, 
+		objects.MotionData.FrameList [frameIndex].JointRotate (clickedJointName, 
 			(Input.mousePosition.y - posBefore.y) * 2.0f);
 
-		labelAngleIndicator.text = objects.motionData.frameList [frameIndex].jointAngles [(int)clickedJointName].Angle.ToString ();
+		labelAngleIndicator.text = objects.MotionData.FrameList [frameIndex].JointAngles [(int)clickedJointName].Angle.ToString ();
 		// 旧マウスポインタ座標更新
 		posBefore = Input.mousePosition;
 

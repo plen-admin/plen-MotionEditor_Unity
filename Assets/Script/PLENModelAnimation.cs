@@ -2,17 +2,27 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public class PLENModelAnimation : MonoBehaviour {
-	/// <summary>
-	/// 共通利用オブジェクト類管理インスタンス（インスペクタで初期化）
-	/// </summary>
-	public ObjectsController objectsController;
-	/// <summary>
-	/// 再生中判定フラグ（読み取り専用）
-	/// </summary>
-	public bool IsPlaying {
-		get { return isPlaying; }
-	}
+public class PLENModelAnimation : MonoBehaviour, IObjects {
+    public delegate void AnimationStartedHandler(int startClipIndex);
+    public delegate void AnimationClipChangedHandler(int changeClipIndex);
+    public delegate void AnimationEndedHandler(int endClipIndex);
+
+    public event AnimationStartedHandler AnimationStarted;
+    public event AnimationClipChangedHandler AnimationClipChanged;
+    public event AnimationEndedHandler AnimationEnded;
+
+    /// <summary>
+    /// 再生中判定フラグ（読み取り専用）
+    /// </summary>
+    public bool IsPlaying {
+        get {
+            return isPlaying;
+        }
+    }
+    /// <summary>
+    /// 共通利用オブジェクト類管理インスタンス
+    /// </summary>
+    private ObjectsController objects;
 	/// <summary>
 	/// アニメーションクリップリスト
 	/// </summary>
@@ -20,7 +30,7 @@ public class PLENModelAnimation : MonoBehaviour {
 	/// <summary>
 	/// アニメーションに用いるGameObjectの相対パス
 	/// </summary>
-	public string[] relativePathes = null;
+	private string[] relativePathes;
 	/// <summary>
 	/// Animation
 	/// </summary>
@@ -40,7 +50,11 @@ public class PLENModelAnimation : MonoBehaviour {
 	/// <summary>
 	/// 再生終了インデックス
 	/// </summary>
-	private int _endIndex;
+	private int endIndex;
+
+    public void Initialize(ObjectsController controller) {
+        objects = controller;
+    }
 
 	// Use this for initialization
 	void Start () {
@@ -56,17 +70,17 @@ public class PLENModelAnimation : MonoBehaviour {
 				if (playingClip < animationClipList.Count - 1) {
 					playingClip++;
 					playingFrameIndex++;
-					objectsController.panelFrames.AnimationClipChanged (playingClip);
+                    if (AnimationClipChanged != null)
+                        AnimationClipChanged(playingClip);
 					thisAnimation.Play (animationClipList [playingClip].name);
 				} else {
 					// 全アニメーションクリップが再生終了したので通知
 					isPlaying = false;
-					objectsController.panelFrames.PlayAnimationEnded (_endIndex);
-					objectsController.isAnimationPlaying = false;
+                    if (AnimationEnded != null)
+                        AnimationEnded(endIndex);
 				}
 			}
 		}
-
 	}
 	/// <summary>
 	/// アニメーション停止メソッド
@@ -75,49 +89,49 @@ public class PLENModelAnimation : MonoBehaviour {
 		if (isPlaying == true) {
 			thisAnimation.Stop ();
 			isPlaying = false;
-			objectsController.panelFrames.PlayAnimationEnded (playingFrameIndex);
-			objectsController.isAnimationPlaying = false;
+            if (AnimationEnded != null)
+                AnimationEnded(playingFrameIndex);
 		}
 	}
 
 	public void AnimationPlay() {
-		AnimationPlay (0, objectsController.panelFrames.frameImgList.Count - 1);
+		AnimationPlay (0, objects.PanelFrames.FrameCount - 1);
 	}
 	/// <summary>
 	/// アニメーション再生メソッド
 	/// </summary>
 	public void AnimationPlay(int startIndex, int endIndex) {
 		// フレームが1つしかない → そもそもアニメーションが作れない
-		if (objectsController.motionData.frameList.Count <= 1 || startIndex == endIndex)
+		if (objects.MotionData.FrameList.Count <= 1 || startIndex == endIndex)
 			return;
 		// 各関節パーツの相対パスを生成
 		// Note...Start()ではまだmodelJointListが生成されていない場合がある
-		if (relativePathes.Length == 0) {
-			relativePathes = new string[objectsController.motionData.modelJointList.Count];
+		if (relativePathes == null || relativePathes.Length == 0) {
+			relativePathes = new string[objects.MotionData.ModelJointList.Count];
 			for (int i = 0; i < relativePathes.Length; i++) {
-				relativePathes [i] = GetObjectPath (objectsController.motionData.modelJointList [i]);
+				relativePathes [i] = GetObjectPath (objects.MotionData.ModelJointList [i]);
 			}
 		}
 
 		// アニメーション作成
-		createAnimationClips (startIndex, endIndex);
+		CreateAnimationClips (startIndex, endIndex);
 		// 現在再生中のアニメーションを停止
 		thisAnimation.Stop ();
 		// 変数初期化
-		_endIndex = endIndex;
+		this.endIndex = endIndex;
 		playingClip = 0;
 		playingFrameIndex = startIndex;
 		isPlaying = true;
 		// アニメーション再生通知
-		objectsController.panelFrames.AnimationStarted (startIndex);
-		objectsController.isAnimationPlaying = true;
+        if (AnimationStarted != null)
+            AnimationStarted(startIndex);
 		// アニメーション再生
 		thisAnimation.Play (animationClipList [0].name);
 	}
 	/// <summary>
 	/// アニメーション作成メソッド
 	/// </summary>
-	private void createAnimationClips(int startIndex, int endIndex) {
+	private void CreateAnimationClips(int startIndex, int endIndex) {
 		int srcIndex = startIndex;
 		int nxtIndex;
 
@@ -140,11 +154,11 @@ public class PLENModelAnimation : MonoBehaviour {
 			animationClipList [clipIndex].legacy = true;	// SetCurveを使用するにはlegacyをtrueにする必要あり
 			animationClipList [clipIndex].name = clipIndex.ToString ();
 			// 全関節に対してアニメーションを作成
-			for(int j = 0; j < objectsController.motionData.modelJointList.Count; j++) {
+			for(int j = 0; j < objects.MotionData.ModelJointList.Count; j++) {
 				// 変数初期化 (今のフレームと一つ先のフレームの回転量と遷移時間）
-				var angleOld = Quaternion.Euler (objectsController.motionData.frameList [srcIndex].jointAngles [j].eulerAngle);
-				var angleNew = Quaternion.Euler (objectsController.motionData.frameList [nxtIndex].jointAngles [j].eulerAngle);
-				var time = (float)objectsController.motionData.frameList [nxtIndex].transitionTime / 1000;
+				var angleOld = Quaternion.Euler (objects.MotionData.FrameList [srcIndex].JointAngles [j].EulerAngle);
+				var angleNew = Quaternion.Euler (objects.MotionData.FrameList [nxtIndex].JointAngles[j].EulerAngle);
+				var time = (float)objects.MotionData.FrameList [nxtIndex].TransitionTime / 1000;
 				// Rotationプロパティのx,y,z,wに対して一つずつアニメーションを設定
 				AnimationCurve curveX = AnimationCurve.EaseInOut (0f, angleOld.x, time, angleNew.x);
 				AnimationCurve curveY = AnimationCurve.EaseInOut (0f, angleOld.y, time, angleNew.y);				
@@ -154,8 +168,6 @@ public class PLENModelAnimation : MonoBehaviour {
 				animationClipList [i].SetCurve (relativePathes [j], typeof(Transform), "localRotation.y", curveY);
 				animationClipList [i].SetCurve (relativePathes [j], typeof(Transform), "localRotation.z", curveZ);
 				animationClipList [i].SetCurve (relativePathes [j], typeof(Transform), "localRotation.w", curveW);
-
-
 			}
 			// 作成したアニメーションクリップをAnimationに加える
 			thisAnimation.AddClip (animationClipList [clipIndex], animationClipList [clipIndex].name);

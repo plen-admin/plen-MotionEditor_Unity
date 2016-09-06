@@ -7,7 +7,7 @@ using System.IO;
 public delegate void OpenFileDialogFinishedEventHander(string path, string errorMessage);
 public delegate void SaveFileDialogFinishedEventHander(string path, string errorMessage);
 
-public class FileChooser : MonoBehaviour
+public class FileChooser : MonoBehaviour, IObjects
 {
 	/// <summary>
 	/// OpenFileDialog終了イベント
@@ -17,6 +17,10 @@ public class FileChooser : MonoBehaviour
 	/// SaveFileDialog終了イベント
 	/// </summary>
 	public event SaveFileDialogFinishedEventHander SaveFileDialogFinished;
+
+    public void Initialize(ObjectsController controller) {
+        // nop
+    }
 
 	// OS X (mac)でのファイルダイアログ実装
 	#if UNITY_STANDALONE_OSX
@@ -128,6 +132,7 @@ public class FileChooser : MonoBehaviour
 	#elif UNITY_STANDALONE_WIN
 	void Start()
 	{
+        //nop
 	}
 	/// <summary>
 	/// OpenFileDialog呼び出しメソッド

@@ -4,8 +4,8 @@ using System.Collections.Generic;
 
 namespace PLEN.JSON {
 	public class Main {
-		public int slot;
-		public string name;
+		public int slot { get; set; }
+		public string name { get; set; }
 		public List<Code> codes = new List<Code> ();
 		public List<Frame> frames = new List<Frame>();
 	}
@@ -18,8 +18,8 @@ namespace PLEN.JSON {
 		public List<Output> outputs = new List<Output>();
 	}
 	public class Output {
-		public string device;
-		public int value;
+		public string device { get; set; }
+		public int value { get; set; }
 	}
 }
 

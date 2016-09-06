@@ -22,7 +22,7 @@ public class MotionInstall : MonoBehaviour {
 		// プロセス起動の各種設定．（MotionInstallerの仕様上第一引数：JSONファイルパス，第二引数：ファイル名である）
 		System.Diagnostics.ProcessStartInfo info = new System.Diagnostics.ProcessStartInfo ();
 		//info.FileName = "c:/Git/plen2__ble_motion_installer_gui/bin/Debug/MotionInstaller.exe";
-		info.FileName = ObjectsController.externalFilePath + "MotionInstaller.exe";
+		info.FileName = ObjectsController.ExternalFilePath + "MotionInstaller.exe";
 		info.Arguments = WWW.EscapeURL(jsonPath) + " " + WWW.EscapeURL(fileName);
 
 		Debug.Log (info.FileName);
