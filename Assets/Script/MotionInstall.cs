@@ -40,7 +40,7 @@ public class MotionInstall : MonoBehaviour {
 		System.Diagnostics.Process process = new System.Diagnostics.Process();
 
 		process.StartInfo = new System.Diagnostics.ProcessStartInfo () {
-			FileName = ObjectsController.externalFilePath + "MotionInstaller.app/Contents/MacOS/MotionInstaller",
+			FileName = ObjectsController.ExternalFilePath + "MotionInstaller.app/Contents/MacOS/MotionInstaller",
 			Arguments = WWW.EscapeURL (jsonPath) + " " + WWW.EscapeURL (fileName)
 		};
 
